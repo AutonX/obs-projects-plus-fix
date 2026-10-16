@@ -246,6 +246,14 @@ export class DataApi {
   }
 }
 
+/** A cleared cell: the property must leave the note, not linger as an empty value. */
+function isAbsentPropertyValue(value: unknown): boolean {
+  if (value === null || value === undefined) return true;
+  if (typeof value === "string" && value.trim() === "") return true;
+  if (Array.isArray(value) && value.length === 0) return true;
+  return false;
+}
+
 export function doUpdateRecord(
   data: string,
   fields: DataField[],
@@ -259,6 +267,14 @@ export function doUpdateRecord(
         Object.entries({ ...frontmatter, ...record.values })
           .map((entry) => {
             const value = entry[1];
+            // undefined is what encodeFrontMatter treats as "remove this key".
+            // null and "" would otherwise be written back as an empty property.
+            if (
+              Object.prototype.hasOwnProperty.call(record.values, entry[0]) &&
+              isAbsentPropertyValue(value)
+            ) {
+              return [entry[0], undefined];
+            }
             if (value instanceof Date) {
               const isDatetime = fields.find(
                 (field) =>
@@ -305,6 +321,11 @@ export function applyRecordToFrontmatter(
   for (const [key, value] of Object.entries(record.values)) {
     const field = fields.find((f) => f.name === key);
     if (field?.derived) continue;
+
+    if (isAbsentPropertyValue(value)) {
+      delete frontmatter[key];
+      continue;
+    }
 
     if (isDate(value)) {
       const isDatetime =

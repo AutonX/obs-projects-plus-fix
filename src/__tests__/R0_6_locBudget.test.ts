@@ -53,10 +53,12 @@ const BUDGETS: ReadonlyArray<{ file: string; maxLines: number }> = [
   { file: "ui/views/Dashboard/DashboardCanvas.svelte", maxLines: 195 },
   { file: "ui/views/Dashboard/dashboardSuggest.ts", maxLines: 60 },
   // F2 (#074) — TABLE_V2_CANON §5 budgets
-  { file: "ui/views/Dashboard/widgets/DatabaseCall/DataTableContent.svelte", maxLines: 280 },
+  // Name-cell rename branches through the orchestrator; the editor itself
+  // lives on the row. Both ceilings moved with that, and no further.
+  { file: "ui/views/Dashboard/widgets/DatabaseCall/DataTableContent.svelte", maxLines: 285 },
   { file: "ui/views/Dashboard/widgets/DatabaseCall/TableControlBar.svelte", maxLines: 200 },
   { file: "ui/views/Dashboard/widgets/DatabaseCall/TableHeader.svelte", maxLines: 200 },
-  { file: "ui/views/Dashboard/widgets/DatabaseCall/TableRow.svelte", maxLines: 200 },
+  { file: "ui/views/Dashboard/widgets/DatabaseCall/TableRow.svelte", maxLines: 225 },
   { file: "ui/views/Dashboard/widgets/DatabaseCall/TableFooter.svelte", maxLines: 120 },
   { file: "ui/views/Dashboard/widgets/DatabaseCall/tableCanon.ts", maxLines: 260 },
   { file: "ui/views/Dashboard/widgets/DatabaseCall/EditableCell.svelte", maxLines: 250 },

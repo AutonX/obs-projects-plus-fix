@@ -7,7 +7,8 @@
    * Boolean toggles instantly. Relation editing is #081
    * (RelationPickerPopover); derived types are read-only by contract.
    */
-  import { createEventDispatcher, tick } from "svelte";
+  import { createEventDispatcher } from "svelte";
+  import { focusEditor } from "./noteRename";
   import {
     DataFieldType,
     type DataField,
@@ -47,13 +48,18 @@
   $: isChoice = field.type === DataFieldType.Select || field.type === DataFieldType.Status;
 
   let draft = "";
-  let inputEl: HTMLInputElement | null = null;
   let committed = false;
+  let editorWasOpen = false;
 
-  $: if (editing) {
-    draft = value === null || value === undefined ? "" : String(value);
-    committed = false;
-    void tick().then(() => inputEl?.focus());
+  // Seed the draft when the editor opens. Focusing here, via tick(), runs
+  // before the input exists, so the caret never arrives and keystrokes hit
+  // the cell instead. The input focuses itself once it is mounted.
+  $: if (editing !== editorWasOpen) {
+    editorWasOpen = editing;
+    if (editing) {
+      draft = value === null || value === undefined ? "" : String(value);
+      committed = false;
+    }
   }
 
   function handleCellClick() {
@@ -101,10 +107,10 @@
   on:keydown={(e) => { if (e.key === "Enter" && !editing) { e.preventDefault(); handleCellClick(); } }}
 >
   {#if editing && field.type === DataFieldType.Date}
-    <input bind:this={inputEl} class="ppp-t2-editor" type="date" bind:value={draft}
+    <input use:focusEditor class="ppp-t2-editor" type="date" bind:value={draft}
       on:keydown={handleKeydown} on:blur={() => commitDraft(draft)} />
   {:else if editing && field.type === DataFieldType.Number}
-    <input bind:this={inputEl} class="ppp-t2-editor ppp-t2-editor--number" type="text" inputmode="decimal"
+    <input use:focusEditor class="ppp-t2-editor ppp-t2-editor--number" type="text" inputmode="decimal"
       bind:value={draft} on:keydown={handleKeydown} on:blur={() => commitDraft(draft)} />
   {:else if editing && field.type === DataFieldType.Relation}
     <span class="ppp-t2-text">{cell.kind === "text" ? cell.text : ""}</span>
@@ -117,7 +123,7 @@
       on:commit={(e) => commitDraft(e.detail)}
       on:cancel={() => { committed = true; dispatch("cancel"); }} />
   {:else if editing}
-    <input bind:this={inputEl} class="ppp-t2-editor" type="text" bind:value={draft}
+    <input use:focusEditor class="ppp-t2-editor" type="text" bind:value={draft}
       on:keydown={handleKeydown} on:blur={() => commitDraft(draft)} />
   {:else if field.type === DataFieldType.Rollup || field.typeConfig?.rollup}
     <!-- #045.4: shown by its mode (percent bar, show chips, plain count); read-only like every derived field.

@@ -31,6 +31,7 @@
   import { openContextMenu } from "src/lib/contextMenu";
   import { emitCommand } from "src/lib/stores/commandBus";
   import { toRem } from "src/ui/utils/cssLength";
+  import { renameTableNote } from "./noteRename";
   import { buildRowMenuEntries, createNamedRecord, isRowDriving, toggleRowSelection } from "./tableRowOps";
   import { applySortPatch, applyHidePatch, applyCalculatePatch, applyWidthPatch, applyGroupPatch, toggleGroupCollapsed, optionPools } from "./tableHeaderOps";
   import {
@@ -122,6 +123,11 @@
   function handleCommitEdit(e: CustomEvent<{ record: DataRecord; field: string; value: Optional<DataValue> }>) {
     const { record, field, value } = e.detail;
     editingCell = null;
+    // `name` is the file name and is derived, so a field write is dropped.
+    if (field === "name") {
+      if ($app && typeof value === "string") void renameTableNote($app, record.id, value);
+      return;
+    }
     if (record.values[field] === value) return;
     api.updateRecord(updateRecordValues(record, { [field]: value }), fields);
   }

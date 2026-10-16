@@ -12,7 +12,8 @@
  *      falls back to the legacy `read()` / `write()` pipeline.
  */
 import { DataFieldType, type DataField, type DataRecord } from "src/lib/dataframe/dataframe";
-import { DataApi, applyRecordToFrontmatter } from "src/lib/dataApi";
+import { DataApi, applyRecordToFrontmatter, doUpdateRecord } from "src/lib/dataApi";
+import { either as E } from "fp-ts";
 import { IFile, type IFileSystem } from "src/lib/filesystem/filesystem";
 
 const fields: DataField[] = [
@@ -85,6 +86,31 @@ describe("applyRecordToFrontmatter", () => {
     const fm: Record<string, unknown> = {};
     applyRecordToFrontmatter(fm, fields, { id: "x", values: { computed: 999 } });
     expect("computed" in fm).toBe(false);
+  });
+
+  test("a cleared value removes the property instead of leaving it empty", () => {
+    const fm: Record<string, unknown> = { 分类: "版本", 版本: "合并", 开关: true, 数量: 0 };
+    applyRecordToFrontmatter(fm, fields, {
+      id: "x",
+      values: { 分类: null, 版本: "", 备注: "   ", 标签: [], 开关: false, 数量: 0 },
+    });
+    expect(fm).toEqual({ 开关: false, 数量: 0 });
+  });
+});
+
+describe("doUpdateRecord — a cleared value drops the key", () => {
+  test("null is removed from the note, neighbouring properties stay", () => {
+    const written = doUpdateRecord(
+      "---\n分类: 版本\n版本: 合并\n---\n正文\n",
+      fields,
+      { id: "x", values: { 分类: null } },
+    );
+    expect(E.isRight(written)).toBe(true);
+    if (E.isRight(written)) {
+      expect(written.right).not.toContain("分类");
+      expect(written.right).toContain("版本: 合并");
+      expect(written.right).toContain("正文");
+    }
   });
 });
 

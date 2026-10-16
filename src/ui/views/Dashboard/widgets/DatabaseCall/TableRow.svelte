@@ -12,6 +12,7 @@
   import type { ViewApi } from "src/lib/viewApi";
   import { cellDisplay, type TableColumn } from "./tableCanon";
   import EditableCell from "./EditableCell.svelte";
+  import { focusEditor } from "./noteRename";
 
   export let columns: TableColumn[];
   export let record: DataRecord;
@@ -50,13 +51,42 @@
     // Identifier fields often store the full path/wikilink — normalize.
     return baseName(cell.text.replace(/^\[\[|\]\]$/g, ""));
   }
+
+  $: primaryField = columns.find((c) => c.isPrimary)?.field.name ?? null;
+  $: titleEditable = !readonly && primaryField === "name";
+  $: naming = titleEditable && editingField === primaryField;
+  let nameDraft = "";
+  let nameCommitted = false;
+
+  function beginNameEdit() {
+    if (!titleEditable || naming || primaryField === null) return;
+    nameDraft = nameText();
+    nameCommitted = false;
+    dispatch("startEdit", { recordId: record.id, field: primaryField });
+  }
+
+  function commitName() {
+    if (nameCommitted || !naming || !primaryField) return;
+    nameCommitted = true;
+    dispatch("commitEdit", { record, field: primaryField, value: nameDraft });
+  }
+
+  function onNameKey(e: KeyboardEvent) {
+    if (e.key === "Enter") { e.preventDefault(); commitName(); }
+    else if (e.key === "Escape") { e.preventDefault(); nameCommitted = true; dispatch("cancelEdit"); }
+  }
 </script>
 
 <div class="ppp-t2-row" class:ppp-t2-row--driving={driving} role="row">
   {#each columns as col (col.field.name)}
     {#if col.isPrimary}
-      <div class="ppp-t2-cell ppp-t2-cell--primary" role="gridcell">
+    <div class="ppp-t2-cell ppp-t2-cell--primary" class:ppp-t2-cell--editing={naming} role="gridcell" tabindex={titleEditable ? 0 : -1}
+      on:click={beginNameEdit} on:keydown={(e) => { if (e.key === "Enter" && !naming) { e.preventDefault(); beginNameEdit(); } }}>
+      {#if naming}
+        <input class="ppp-t2-editor" use:focusEditor={true} bind:value={nameDraft} on:click|stopPropagation on:keydown|stopPropagation={onNameKey} on:blur={commitName} />
+      {:else}
         <span class="ppp-t2-name">{nameText()}</span>
+      {/if}
         <button
           class="ppp-t2-rowbtn clickable-icon"
           on:click|stopPropagation={(e) => dispatch("openRecord", { record, event: e })}
@@ -117,10 +147,26 @@
   }
 
   .ppp-t2-name {
+    flex: 1;
+    min-width: 0;
     font-weight: var(--font-medium, 500);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .ppp-t2-cell--primary:not([tabindex="-1"]) { cursor: text; }
+  .ppp-t2-cell--editing { box-shadow: inset 0 0 0 var(--border-width) var(--interactive-accent); }
+  .ppp-t2-editor {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-normal);
+    font: inherit;
+    font-weight: var(--font-medium, 500);
+    outline: none;
+    padding: 0;
   }
 
   .ppp-t2-rowbtn {
