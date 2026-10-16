@@ -69,8 +69,9 @@ describe("getColumns — semantic group mode (NPLAN-C1)", () => {
     expect(byId["In Progress"]?.map((r) => r.id).sort()).toEqual(["r2", "r4"].sort());
     // Complete bucket: Done
     expect(byId["Done"]?.map((r) => r.id).sort()).toEqual(["r3"]);
-    // None bucket: null + unknown value
-    expect(byId["views.board.no-status"]?.map((r) => r.id).sort()).toEqual(["r6", "r7"].sort());
+    // None bucket: a real value outside the groups. A missing value is omitted.
+    expect(byId["views.board.no-status"]?.map((r) => r.id)).toEqual(["r7"]);
+    expect(cols.flatMap((c) => c.records.map((r) => r.id))).not.toContain("r6");
   });
 
   test("semantic columns are marked pinned:true", () => {
@@ -122,5 +123,33 @@ describe("getColumns — semantic group mode (NPLAN-C1)", () => {
     expect(ids).toContain("In Progress");
     expect(ids).toContain("Done");
     expect(ids).not.toContain("views.board.no-status");
+  });
+});
+
+describe("getColumns — a missing group value leaves the board", () => {
+  const field: DataField = {
+    name: "分类",
+    type: DataFieldType.String,
+    repeated: false,
+    identifier: false,
+    derived: false,
+  };
+
+  test("hides an empty grouping field and keeps 0 and false on the board", () => {
+    const records: DataRecord[] = [
+      { id: "kept", values: { 分类: "环境" } },
+      { id: "cleared", values: { 分类: null } },
+      { id: "blank", values: { 分类: "  " } },
+      { id: "zero", values: { 分类: 0 } },
+      { id: "flag", values: { 分类: false } },
+    ];
+    const cols = getColumns(records, {}, field);
+    const byId = Object.fromEntries(cols.map((c) => [c.id, c.records.map((r) => r.id)]));
+    const shown = cols.flatMap((c) => c.records.map((r) => r.id));
+
+    expect(byId["环境"]).toEqual(["kept"]);
+    expect(byId["views.board.no-status"]?.sort()).toEqual(["flag", "zero"]);
+    expect(shown).not.toContain("cleared");
+    expect(shown).not.toContain("blank");
   });
 });

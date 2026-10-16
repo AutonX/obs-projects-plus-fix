@@ -136,6 +136,9 @@ function groupRecordsByField(
 
   records.forEach((record) => {
     const value = record.values[fieldName];
+    // No value for the grouping field: the note stays in the project, and
+    // off this board. 0 and false still count as values.
+    if (isAbsentBoardValue(value)) return;
 
     if (value && isString(value)) {
       res[value]?.push(record);
@@ -146,11 +149,22 @@ function groupRecordsByField(
     }
   });
 
+  for (const key of Object.keys(res)) {
+    if (key !== noStatus && isAbsentBoardValue(key)) delete res[key];
+  }
+
   if (!res[noStatus]?.length) {
     delete res[noStatus];
   }
 
   return res;
+}
+
+function isAbsentBoardValue(value: unknown): boolean {
+  if (value === null || value === undefined) return true;
+  if (typeof value === "string" && value.trim() === "") return true;
+  if (Array.isArray(value) && value.length === 0) return true;
+  return false;
 }
 
 /**
@@ -192,7 +206,8 @@ function applyCustomRecordOrder(
  * NPLAN-C1 — derive columns from semantic status groups (todo /
  * inProgress / complete). Always produces exactly those three columns
  * that have at least one matching option value defined in `statusGroups`.
- * Records whose field value doesn't match any group go into "No Status".
+ * A value that matches no group goes into "No Status". A note with no
+ * value for the field is left off the board.
  * This never replaces user data — it's an overlay presentation only.
  */
 function getSemanticColumns(
@@ -221,6 +236,7 @@ function getSemanticColumns(
 
   for (const record of records) {
     const val = record.values[field.name];
+    if (isAbsentBoardValue(val)) continue;
     const str = val && (isString(val) || isNumber(val)) ? String(val) : null;
     const bucket = bucketLabelForRaw(str, groups, LABELS);
     buckets[bucket]!.push(record);
