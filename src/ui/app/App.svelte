@@ -79,8 +79,11 @@
   $: view = (() => {
     const found = views.find((v) => viewId === v.id);
     if (!found && views.length > 0) {
-      // Side effect: update viewId if not found
-      viewId = views[0]?.id;
+      const next = views[0]?.id;
+      if (next && next !== viewId) {
+        viewId = next;
+        dispatch("viewIdChange", next);
+      }
       return views[0];
     }
     return found;
@@ -279,8 +282,7 @@
     const result = await createDemoWithNotices($app.vault, (nextProject, nextView) => {
       projectId = nextProject;
       dispatch("projectIdChange", nextProject);
-      viewId = nextView;
-      dispatch("viewIdChange", nextView);
+      selectView(nextView);
     });
     return result !== null;
   }
@@ -335,12 +337,16 @@
     settings.updateView(project.id, updatedView);
   }
 
+  function selectView(next: ViewId) {
+    viewId = next;
+    dispatch("viewIdChange", next);
+  }
+
   function handleAddView(project: ProjectDefinition | undefined) {
     if (!project) return;
     new AddViewModal($app, project, (projectId, view) => {
       settings.addView(projectId, view);
-      dispatch("viewIdChange", view.id);
-      viewId = view.id;
+      selectView(view.id);
     }).open();
   }
 
@@ -406,7 +412,7 @@
     viewId={view?.id}
     {view}
     agendaOpen={navAgendaOpen}
-    on:viewChange={(event) => (viewId = event.detail)}
+    on:viewChange={(event) => selectView(event.detail)}
     on:addView={() => handleAddView(project)}
     on:openSettings={(event) => handleOpenSettings(event.detail)}
     on:centerToday={handleCenterToday}
@@ -470,9 +476,7 @@
         dispatch("projectIdChange", event.detail);
         closeSettingsMenu();
       }}
-      on:viewChange={(event) => {
-        viewId = event.detail;
-      }}
+      on:viewChange={(event) => selectView(event.detail)}
       on:addProject={openCreateProject}
       on:createDemo={() => {
         closeSettingsMenu();

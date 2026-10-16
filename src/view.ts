@@ -38,6 +38,11 @@ export type ProjectsViewState = {
  */
 export class ProjectsView extends ItemView {
   component?: App;
+  /**
+   * What Back restores, and what the workspace saves for this leaf.
+   * Obsidian snapshots it with `getState` when a note replaces this view.
+   */
+  private navigationState: ProjectsViewState = { projectId: "", viewId: "" };
 
   constructor(leaf: WorkspaceLeaf, readonly plugin: ProjectsPlugin) {
     super(leaf);
@@ -81,16 +86,23 @@ export class ProjectsView extends ItemView {
     super.onPaneMenu(menu, source);
   }
 
+  getState(): Record<string, unknown> {
+    return { ...this.navigationState };
+  }
+
   async setState(
-    state: ProjectsViewState,
+    state: unknown,
     result: ViewStateResult
   ): Promise<void> {
-    if (this.component) {
-      this.component.$set({
-        projectId: state.projectId,
-        viewId: state.viewId,
-      });
-    }
+    const next = (state ?? {}) as Partial<ProjectsViewState>;
+    this.navigationState = {
+      projectId: typeof next.projectId === "string" ? next.projectId : "",
+      viewId: typeof next.viewId === "string" ? next.viewId : "",
+    };
+    this.component?.$set({
+      projectId: this.navigationState.projectId || undefined,
+      viewId: this.navigationState.viewId || undefined,
+    });
 
     await super.setState(state, result);
   }
@@ -99,31 +111,38 @@ export class ProjectsView extends ItemView {
   async onOpen(): Promise<void> {
     customViews.set(this.getProjectViews());
 
-    // Get the current state or use defaults
-    const currentState = (this.getState && this.getState()) as ProjectsViewState | undefined;
-    const projectId = currentState?.projectId;
-    const viewId = currentState?.viewId;
+    // setState has already copied the restored leaf into navigationState.
+    const { projectId, viewId } = this.navigationState;
 
     this.component = new App({
       target: this.contentEl,
       props: {
-        projectId,
-        viewId,
+        projectId: projectId || undefined,
+        viewId: viewId || undefined,
       }
     });
 
-    // Listen for projectId changes and save them to view state
-    if (this.component) {
-       
-      this.component.$on('projectIdChange', (event: CustomEvent<string>) => {
-        const newProjectId = event.detail;
-        // Update internal state and persist it
-        const newState: ProjectsViewState = { projectId: newProjectId, viewId: viewId ?? '' };
-        void this.setState(newState, { history: false });
-        // Update the component with new projectId
-        this.component?.$set({ projectId: newProjectId });
-      });
-    }
+    // history: false keeps a tab click from becoming its own Back step.
+    // The updated state is what getState reports when a note is opened.
+    const remember = (patch: Partial<ProjectsViewState>) => {
+      const next: ProjectsViewState = {
+        projectId: patch.projectId ?? this.navigationState.projectId,
+        viewId: patch.viewId ?? this.navigationState.viewId,
+      };
+      if (
+        next.projectId === this.navigationState.projectId &&
+        next.viewId === this.navigationState.viewId
+      ) return;
+      void this.setState(next, { history: false });
+      this.app.workspace.requestSaveLayout();
+    };
+
+    this.component.$on("projectIdChange", (event: CustomEvent<string>) => {
+      remember({ projectId: event.detail });
+    });
+    this.component.$on("viewIdChange", (event: CustomEvent<string>) => {
+      remember({ viewId: event.detail });
+    });
   }
 
    
