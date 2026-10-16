@@ -12,6 +12,17 @@ export function excludeHeaderField(
   return includeFields.filter((f) => f.name !== customHeader.name);
 }
 
+/**
+ * Fields drawn under the card title. The title is already the note name, so
+ * the derived file `path` is not repeated in the body.
+ */
+export function boardBodyFields(
+  includeFields: DataField[],
+  customHeader: DataField | undefined
+): DataField[] {
+  return excludeHeaderField(includeFields, customHeader).filter((f) => f.name !== "path");
+}
+
 export function getDisplayName(recordId: string): string {
   const basename = getBasename(recordId);
   return basename.slice(0, basename.lastIndexOf("."));

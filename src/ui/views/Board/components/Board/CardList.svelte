@@ -176,7 +176,7 @@
   import { flip } from "svelte/animate";
   import { getCoverRealPath } from "src/ui/views/Gallery/gallery";
   import type { BoardThumbnailLayout } from "../../types";
-  import { excludeHeaderField, getDisplayName } from "./boardHelpers";
+  import { boardBodyFields, getDisplayName } from "./boardHelpers";
   import type {
     DropTrigger,
     OnRecordClick,
@@ -268,7 +268,7 @@
   const isPlaceholder = (item: DataRecord) =>
     !!(item as any)[SHADOW_ITEM_MARKER_PROPERTY_NAME];
 
-  $: bodyFields = excludeHeaderField(includeFields, customHeader);
+  $: bodyFields = boardBodyFields(includeFields, customHeader);
 
   /**
    * cards-g4: a card's thumbnail, resolved the gallery's way (an image file

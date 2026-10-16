@@ -18,6 +18,7 @@
 
   import BoardColumn from "./BoardColumn.svelte";
   import NewColumn from "./NewColumn.svelte";
+  import { horizontalBarScrollDelta } from "./horizontalBarWheel";
   // ios-d1: the column row is a `dragHandleZone` sharing the cards' arming
   // store, so a tap on a column grip must disarm it too (see CardList).
   import { disarmAfterGripTap, gateDisabledGrip, isDisarmEvent, isDragZoneDisabled } from "./CardList.svelte";
@@ -166,12 +167,31 @@
    * e.preventDefault() reliably blocks the browser's built-in
    * Ctrl+Scroll zoom while the plugin's own zoom is active.
    *
+   * A vertical wheel with the pointer on the horizontal scrollbar scrolls
+   * the board sideways; the listener has to be non-passive for that too.
+   *
    * v3.0.10: Also handles pinch-to-zoom on touch devices.
    */
   function wheelZoom(node: HTMLElement) {
     // --- Desktop: Ctrl+Wheel ---
     function wheelHandler(e: WheelEvent) {
-      if (!e.ctrlKey && !e.metaKey) return;
+      if (!e.ctrlKey && !e.metaKey) {
+        const rect = node.getBoundingClientRect();
+        const scrollDelta = horizontalBarScrollDelta({
+          clientY: e.clientY,
+          rectBottom: rect.bottom,
+          offsetHeight: node.offsetHeight,
+          clientHeight: node.clientHeight,
+          deltaX: e.deltaX,
+          deltaY: e.deltaY,
+          deltaMode: e.deltaMode,
+          pageSize: node.clientWidth,
+        });
+        if (scrollDelta === null) return;
+        e.preventDefault();
+        node.scrollLeft += scrollDelta;
+        return;
+      }
       e.preventDefault();
       const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
       const next = Math.round(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom + delta)) * 100) / 100;

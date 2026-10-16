@@ -1,6 +1,6 @@
 import { describe, it, expect } from "@jest/globals";
 import { DataFieldType, type DataField } from "src/lib/dataframe/dataframe";
-import { excludeHeaderField, getDisplayName } from "./boardHelpers";
+import { boardBodyFields, excludeHeaderField, getDisplayName } from "./boardHelpers";
 
 function field(name: string): DataField {
   return { name, type: DataFieldType.String, repeated: false, identifier: false, derived: false };
@@ -31,5 +31,17 @@ describe("excludeHeaderField (#109)", () => {
   it("is a no-op when customHeader is not in the list", () => {
     const result = excludeHeaderField(fields, field("priority"));
     expect(result.map((f) => f.name)).toEqual(["title", "status", "client"]);
+  });
+});
+
+describe("boardBodyFields", () => {
+  const fields = [field("path"), field("status"), field("client")];
+
+  it("drops path because the card title is already the note name", () => {
+    expect(boardBodyFields(fields, undefined).map((f) => f.name)).toEqual(["status", "client"]);
+  });
+
+  it("also drops the custom header", () => {
+    expect(boardBodyFields(fields, field("client")).map((f) => f.name)).toEqual(["status"]);
   });
 });

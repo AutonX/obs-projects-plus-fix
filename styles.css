@@ -163,7 +163,7 @@
   /* cards-g1: the padding as a variable, so the grip lane (CardList.svelte)
      can reach through it to the card's top and bottom edges. cards-g2: the
      card is SharedCard.svelte's article; this surface stays global. */
-  --board-card-pad: var(--size-4-2);
+  --board-card-pad: var(--size-4-1);
   background-color: var(--background-primary);
   border-radius: var(--radius-s);
   border: var(--ppp-border-width) solid var(--background-modifier-border);
