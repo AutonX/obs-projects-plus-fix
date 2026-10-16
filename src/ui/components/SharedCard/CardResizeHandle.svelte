@@ -22,6 +22,9 @@
    * The element whose height the frame sets is the one the view marks with
    * `data-ppp-frame-target` inside the card (the media), else the card itself;
    * it is measured only when no height is saved, to start from what is shown.
+   * A drag also measures that box once with the saved frame lifted off. If the
+   * drag comes back down to that content height, the height override is
+   * dropped instead of a minimum being saved.
    */
   import { onDestroy } from "svelte";
   import { i18n } from "src/lib/stores/i18n";
@@ -31,7 +34,7 @@
     HEIGHT_STEP_REM,
     LARGE_STEP,
     clampGridSpan,
-    heightAfterDrag,
+    heightOverrideAfterDrag,
     normalizeCardFrame,
     resolveCardFrame,
     sameFrame,
@@ -66,6 +69,8 @@
     y: number;
     root: number;
     height: number;
+    /** Content height in rem, measured with the saved frame lifted off. */
+    content: number;
     span: number;
     step: number;
     proposed: CardFrame | undefined;
@@ -76,12 +81,45 @@
   /** The card this handle belongs to. */
   const card = (): HTMLElement | null => node?.closest<HTMLElement>(".ppp-shared-card") ?? null;
 
+  /** The box whose height the frame sets: the marked media, else the card. */
+  function frameTarget(): HTMLElement | null {
+    const host = card();
+    return host?.querySelector<HTMLElement>("[data-ppp-frame-target]") ?? host;
+  }
+
   /** The height shown now, in rem: the saved one, else the frame target measured. */
   function shownHeight(root: number): number {
     if (current.heightRem !== undefined) return current.heightRem;
+    return snapHeightRem((frameTarget()?.getBoundingClientRect().height ?? 0) / root);
+  }
+
+  /**
+   * The card's content height in rem. The saved frame is lifted for the read
+   * (min-height, a forced media height, the left-thumbnail lane) and put back
+   * before paint, so the measurement is the box without this drag's minimum.
+   */
+  function contentHeightRem(root: number): number {
     const host = card();
-    const target = host?.querySelector<HTMLElement>("[data-ppp-frame-target]") ?? host;
-    return snapHeightRem((target?.getBoundingClientRect().height ?? 0) / root);
+    const target = frameTarget();
+    if (!host || !target || !(root > 0)) return 0;
+    const prevMin = host.style.minHeight;
+    const prevThumb = host.style.getPropertyValue("--ppp-board-card-thumb");
+    const prevHeight = target.style.height;
+    const prevRatio = target.style.getPropertyValue("--ppp-card-media-ratio");
+    host.style.minHeight = "0";
+    host.style.removeProperty("--ppp-board-card-thumb");
+    if (target !== host) {
+      target.style.height = "";
+      target.style.removeProperty("--ppp-card-media-ratio");
+    }
+    const px = target.getBoundingClientRect().height;
+    host.style.minHeight = prevMin;
+    if (prevThumb) host.style.setProperty("--ppp-board-card-thumb", prevThumb);
+    if (target !== host) {
+      target.style.height = prevHeight;
+      if (prevRatio) target.style.setProperty("--ppp-card-media-ratio", prevRatio);
+    }
+    return Number.isFinite(px) && px > 0 ? px / root : 0;
   }
 
   /** One column of travel: the grid's measure, else the card's width per span. */
@@ -116,6 +154,7 @@
       y: e.clientY,
       root,
       height: shownHeight(root),
+      content: contentHeightRem(root),
       span: current.gridSpan ?? 1,
       step: horizontal ? stepWidth() : 0,
       proposed: override,
@@ -127,7 +166,7 @@
   function onPointerMove(e: PointerEvent): void {
     if (!drag || e.pointerId !== drag.pointerId) return;
     e.stopPropagation();
-    const height = heightAfterDrag(drag.height, e.clientY - drag.y, drag.root);
+    const height = heightOverrideAfterDrag(drag.height, e.clientY - drag.y, drag.root, drag.content);
     const span = horizontal ? spanAfterDrag(drag.span, e.clientX - drag.x, drag.step) : drag.span;
     const proposed = overrideWith({
       ...(height !== drag.height ? { heightRem: height } : {}),

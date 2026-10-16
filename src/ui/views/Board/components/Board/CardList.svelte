@@ -176,16 +176,19 @@
   import { flip } from "svelte/animate";
   import { getCoverRealPath } from "src/ui/views/Gallery/gallery";
   import type { BoardThumbnailLayout } from "../../types";
+  import { openContextMenu } from "src/lib/contextMenu";
   import { boardBodyFields, getDisplayName } from "./boardHelpers";
   import type {
     DropTrigger,
     OnRecordClick,
     OnRecordCheck,
+    OnRecordDelete,
     OnRecordDrop,
   } from "./types";
 
   export let items: DataRecord[];
   export let onRecordClick: OnRecordClick;
+  export let onRecordDelete: OnRecordDelete = () => {};
   export let onRecordCheck: OnRecordCheck;
   export let onDrop: OnRecordDrop;
   export let includeFields: DataField[];
@@ -268,6 +271,23 @@
   const isPlaceholder = (item: DataRecord) =>
     !!(item as any)[SHADOW_ITEM_MARKER_PROPERTY_NAME];
 
+  function onCardContextMenu(event: MouseEvent, item: DataRecord) {
+    if (readOnly || isPlaceholder(item)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openContextMenu(
+      [
+        {
+          title: $i18n.t("views.board.note.delete"),
+          icon: "trash-2",
+          danger: true,
+          onClick: () => onRecordDelete(item),
+        },
+      ],
+      event
+    );
+  }
+
   $: bodyFields = boardBodyFields(includeFields, customHeader);
 
   /**
@@ -334,6 +354,7 @@
       class="ppp-board-card-slot"
       class:projects--board--card-placeholder={isPlaceholder(item)}
       animate:flip={{ duration: flipDurationMs }}
+      on:contextmenu={(e) => onCardContextMenu(e, item)}
     >
       <!-- cards-g2: the zone's item is this plain wrapper, because `animate:flip`
            may only sit on an element directly in the keyed each, never on a

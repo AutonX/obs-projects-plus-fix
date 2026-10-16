@@ -613,7 +613,8 @@
                     }
                 },
                 "note": {
-                    "add": "Add note"
+                    "add": "Add note",
+                    "delete": "Delete note"
                 },
                 "freeze-all": "Freeze all columns",
                 "unfreeze-all": "Unfreeze all columns",

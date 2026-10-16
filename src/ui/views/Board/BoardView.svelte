@@ -27,6 +27,7 @@
     OnRecordAdd,
     OnRecordClick,
     OnRecordCheck,
+    OnRecordDelete,
     OnRecordUpdate,
     OnSortColumns,
     OnColumnAdd,
@@ -98,6 +99,11 @@
   sortRecordsContext.set((records) =>
     hasSort ? sortRecords(records) : [...records]
   );
+
+  const handleRecordDelete: OnRecordDelete = (record) => {
+    if (dataReadOnly) return;
+    api.deleteRecord(record.id);
+  };
 
   const handleRecordClick: OnRecordClick = (record) => {
     if (dataReadOnly) {
@@ -588,6 +594,7 @@
     {cardFrames}
     onCardFrameChange={handleCardFrameChange}
     onRecordClick={handleRecordClick}
+    onRecordDelete={handleRecordDelete}
     onRecordCheck={handleRecordCheck(checkField)}
     onRecordAdd={handleRecordAdd(groupByField)}
     onRecordUpdate={handleRecordUpdate(groupByField)}

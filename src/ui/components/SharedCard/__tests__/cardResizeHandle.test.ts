@@ -156,6 +156,33 @@ describe("cards-g5 — pointer drag", () => {
     m.destroy();
   });
 
+  function box(height: number): DOMRect {
+    return { x: 0, y: 0, top: 0, left: 0, bottom: height, right: 0, width: 0, height, toJSON: () => ({}) } as DOMRect;
+  }
+
+  it("dragging back to the content height clears the saved height", () => {
+    const m = mount({ override: { heightRem: 10 } });
+    // 48px at the 16px root is 3rem, the card's own height once min-height is lifted.
+    jest.spyOn(m.card, "getBoundingClientRect").mockReturnValue(box(48));
+    m.handle.dispatchEvent(pointer("pointerdown", 0, 100));
+    m.handle.dispatchEvent(pointer("pointermove", 0, 100 - 112));
+    expect(m.onPreview).toHaveBeenLastCalledWith({});
+    m.handle.dispatchEvent(pointer("pointerup", 0, 100 - 112));
+    expect(m.onCommit).toHaveBeenCalledTimes(1);
+    expect(m.onCommit).toHaveBeenCalledWith(undefined);
+    m.destroy();
+  });
+
+  it("dragging shorter, but still above the content, keeps a minimum", () => {
+    const m = mount({ override: { heightRem: 10, gridSpan: 2 } });
+    jest.spyOn(m.card, "getBoundingClientRect").mockReturnValue(box(48));
+    m.handle.dispatchEvent(pointer("pointerdown", 0, 100));
+    m.handle.dispatchEvent(pointer("pointermove", 0, 100 - 32));
+    m.handle.dispatchEvent(pointer("pointerup", 0, 100 - 32));
+    expect(m.onCommit).toHaveBeenCalledWith({ heightRem: 8, gridSpan: 2 });
+    m.destroy();
+  });
+
   it("a card with no saved height starts from what it shows, and saves only what moved", () => {
     const m = mount({ view: {}, override: undefined });
     m.handle.dispatchEvent(pointer("pointerdown", 0, 0));

@@ -649,7 +649,8 @@
                     }
                 },
                 "note": {
-                    "add": "新建笔记"
+                    "add": "新建笔记",
+                    "delete": "删除笔记"
                 },
                 "status-groups": {
                     "todo": "待办",

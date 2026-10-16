@@ -31,6 +31,9 @@ jest.mock("src/lib/record/openRecord", () => ({
 }));
 // The shared obsidian-svelte mock renders nothing; the card's checkbox is the
 // real obsidian-svelte component, so a click on it is the click a user makes.
+jest.mock("src/lib/contextMenu", () => ({
+  openContextMenu: jest.fn(),
+}));
 jest.mock("obsidian-svelte", () => ({
   ...jest.requireActual("src/__mocks__/obsidian-svelte.js"),
   Checkbox: jest.requireActual("obsidian-svelte/Checkbox/Checkbox.svelte").default,
@@ -41,6 +44,7 @@ type ComponentClass = new (options: { target: HTMLElement; props: Record<string,
 
 const CardList = require("../CardList.svelte").default as ComponentClass;
 const { openRecord } = require("src/lib/record/openRecord") as { openRecord: jest.Mock };
+const { openContextMenu } = require("src/lib/contextMenu") as { openContextMenu: jest.Mock };
 const helpers = require("src/ui/views/helpers") as { showMobileNavMenu: jest.Mock };
 
 const record = (id: string, done = false) => ({ id, values: { done } });
@@ -139,6 +143,29 @@ describe("cards-g2 — what a click does on each part of a board card", () => {
     m.card(0).dispatchEvent(click());
     expect(m.onRecordClick).toHaveBeenCalledTimes(2);
     expect(m.onRecordClick).toHaveBeenLastCalledWith(m.items[0]);
+    m.destroy();
+  });
+
+  it("a right click offers delete and does not open the card", () => {
+    const onRecordDelete = jest.fn();
+    const m = mountCards({ onRecordDelete });
+    openContextMenu.mockClear();
+    m.card(0).dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+    expect(m.onRecordClick).not.toHaveBeenCalled();
+    expect(openContextMenu).toHaveBeenCalledTimes(1);
+    const [entries] = openContextMenu.mock.calls[0] as [{ title: string; danger?: boolean; onClick: () => void }[]];
+    expect(entries[0]?.title).toBe("views.board.note.delete");
+    expect(entries[0]?.danger).toBe(true);
+    entries[0]?.onClick();
+    expect(onRecordDelete).toHaveBeenCalledWith(m.items[0]);
+    m.destroy();
+  });
+
+  it("a read-only card has no delete menu", () => {
+    const m = mountCards({ readOnly: true });
+    openContextMenu.mockClear();
+    m.card(0).dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+    expect(openContextMenu).not.toHaveBeenCalled();
     m.destroy();
   });
 

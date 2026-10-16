@@ -171,6 +171,29 @@ export function heightAfterDrag(startRem: number, dyCss: number, rootPx: number)
   return snapHeightRem(startRem + dyCss / rootPx);
 }
 
+/**
+ * The height a vertical drag should save, or undefined when the card should
+ * follow its content again. That happens when the drag has come back to the
+ * content height, and also one step under the lower bound when the content
+ * itself is shorter than that bound — nothing between the two can be saved,
+ * so the height override is dropped instead of sticking at the bound.
+ * Above both, the result is the usual snapped minimum.
+ */
+export function heightOverrideAfterDrag(
+  startRem: number,
+  dyCss: number,
+  rootPx: number,
+  contentRem: number,
+): number | undefined {
+  const root = rootPx > 0 ? rootPx : 1;
+  const snapped = Math.round((startRem + dyCss / root) / HEIGHT_STEP_REM) * HEIGHT_STEP_REM;
+  const content = Math.round((Number.isFinite(contentRem) ? contentRem : 0) / HEIGHT_STEP_REM) * HEIGHT_STEP_REM;
+  const floor = CARD_FRAME_BOUNDS.heightRem.min;
+  if (snapped <= content) return undefined;
+  if (snapped < floor && content < floor) return undefined;
+  return snapHeightRem(snapped);
+}
+
 /** The span a horizontal drag reaches: one column per `stepCss` of travel. */
 export function spanAfterDrag(startSpan: number, dxCss: number, stepCss: number): number {
   if (!(stepCss > 0)) return clampGridSpan(startSpan);

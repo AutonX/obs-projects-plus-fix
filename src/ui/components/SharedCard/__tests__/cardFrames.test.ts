@@ -14,6 +14,7 @@ import {
   effectiveSpan,
   gridColumnCount,
   heightAfterDrag,
+  heightOverrideAfterDrag,
   normalizeCardFrame,
   normalizeCardFrames,
   resetAllFrames,
@@ -197,6 +198,21 @@ describe("cards-g5 — snapping and grid math", () => {
     expect(heightAfterDrag(10, -40, 16)).toBe(8);
     expect(heightAfterDrag(10, 7, 16)).toBe(10);
     expect(heightAfterDrag(10, 40, 20)).toBe(12);
+  });
+
+  it("a drag back to the content height drops the saved height", () => {
+    // Still above the content and the lower bound: the minimum is kept.
+    expect(heightOverrideAfterDrag(10, -48, 16, 3)).toBe(7);
+    expect(heightOverrideAfterDrag(10, -64, 16, 3)).toBe(6);
+    // One step under the bound, with the content shorter than the bound: nothing legal to save.
+    expect(heightOverrideAfterDrag(10, -80, 16, 3)).toBeUndefined();
+    expect(heightOverrideAfterDrag(10, -160, 16, 3)).toBeUndefined();
+    // Content taller than the bound: the drag clears as it meets the content, and can sit just above it.
+    expect(heightOverrideAfterDrag(10, -16, 16, 8)).toBe(9);
+    expect(heightOverrideAfterDrag(10, -32, 16, 8)).toBeUndefined();
+    // A taller drag is the usual snapped minimum, including the upper bound.
+    expect(heightOverrideAfterDrag(10, 32, 16, 3)).toBe(12);
+    expect(heightOverrideAfterDrag(10, 800, 16, 3)).toBe(40);
   });
 
   it("a horizontal drag moves one column per step, within bounds", () => {

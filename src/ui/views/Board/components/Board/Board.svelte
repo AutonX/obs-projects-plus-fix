@@ -27,6 +27,7 @@
     OnRecordAdd,
     OnRecordClick,
     OnRecordCheck,
+    OnRecordDelete,
     OnRecordUpdate,
     OnSortColumns,
     OnColumnAdd,
@@ -46,6 +47,7 @@
   export let dataReadOnly: boolean = false;
   export let richText: boolean;
   export let onRecordClick: OnRecordClick;
+  export let onRecordDelete: OnRecordDelete = () => {};
   export let onRecordCheck: OnRecordCheck;
   export let onRecordUpdate: OnRecordUpdate;
   export let onRecordAdd: OnRecordAdd;
@@ -300,6 +302,7 @@
               name={column.id}
               records={column.records}
               {onRecordClick}
+              {onRecordDelete}
               {checkField}
               {onRecordCheck}
               onRecordAdd={() => onRecordAdd(column.id)}
@@ -411,6 +414,7 @@
               name={column.id}
               records={column.records}
               {onRecordClick}
+              {onRecordDelete}
               {checkField}
               {onRecordCheck}
               onRecordAdd={() => onRecordAdd(column.id)}

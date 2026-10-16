@@ -7,6 +7,7 @@
   import type {
     OnRecordClick,
     OnRecordCheck,
+    OnRecordDelete,
     OnRecordDrop,
     OnColumnCollapse,
   } from "./types";
@@ -41,6 +42,7 @@
 
   export let onDrop: OnRecordDrop;
   export let onRecordClick: OnRecordClick;
+  export let onRecordDelete: OnRecordDelete = () => {};
   export let onRecordCheck: OnRecordCheck;
   export let onRecordAdd: () => void;
   export let onColumnPin: (name: string) => void;
@@ -151,6 +153,7 @@
       {cardFrames}
       {onCardFrameChange}
       {onRecordClick}
+      {onRecordDelete}
       {checkField}
       {onRecordCheck}
       {onDrop}
