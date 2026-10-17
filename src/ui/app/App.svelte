@@ -413,6 +413,10 @@
     {view}
     agendaOpen={navAgendaOpen}
     on:viewChange={(event) => selectView(event.detail)}
+    on:reorder={(event) => {
+      const id = project?.id ?? projectId;
+      if (id) settings.reorderViews(id, event.detail.from, event.detail.to);
+    }}
     on:addView={() => handleAddView(project)}
     on:openSettings={(event) => handleOpenSettings(event.detail)}
     on:centerToday={handleCenterToday}

@@ -12,6 +12,7 @@
   export let views: ViewDefinition[] = [];
   export let activeViewId: ViewId | undefined;
   export let onSelect: (viewId: ViewId) => void;
+  export let onReorder: ((from: number, to: number) => void) | undefined = undefined;
 
   $: showTitles = $settings.preferences.showViewTitles ?? true;
 
@@ -33,7 +34,7 @@
 
   let touchStartX = 0;
   let touchStartY = 0;
-  let buttonRefs: HTMLButtonElement[] = [];
+  let buttonRefs: HTMLElement[] = [];
   let touchMoved = false;
   let touchHandled = false;
 
@@ -88,9 +89,54 @@
   }
 
   function handleButtonClick(viewId: ViewId, index: number) {
-    if (touchHandled) return;
+    if (touchHandled || suppressClick) {
+      suppressClick = false;
+      return;
+    }
     onSelect?.(viewId);
     centerTab(index);
+  }
+
+  // Native drag, not a mouse-up listener. This host never delivers mouse-up
+  // to the window or the document, so a pointer tracker cannot finish a move.
+  // dragover/drop land on the tab under the pointer and do not need coordinates.
+  let draggedIndex: number | null = null;
+  let dragOverIndex: number | null = null;
+  let suppressClick = false;
+
+  function onDragStart(event: DragEvent, index: number) {
+    draggedIndex = index;
+    dragOverIndex = null;
+    event.stopPropagation();
+    const transfer = event.dataTransfer;
+    if (!transfer) return;
+    transfer.effectAllowed = "move";
+    try { transfer.setData("text/plain", String(index)); } catch { /* payload refused; the move still proceeds */ }
+  }
+
+  function onDragOver(event: DragEvent, index: number) {
+    if (draggedIndex === null) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+    dragOverIndex = index === draggedIndex ? null : index;
+  }
+
+  function onDrop(event: DragEvent, index: number) {
+    event.preventDefault();
+    event.stopPropagation();
+    const from = draggedIndex;
+    draggedIndex = null;
+    dragOverIndex = null;
+    if (from !== null && from !== index) onReorder?.(from, index);
+  }
+
+  function onDragEnd() {
+    draggedIndex = null;
+    dragOverIndex = null;
+    suppressClick = true;
+    const timerHost = viewSwitcherElement?.ownerDocument.defaultView ?? window;
+    timerHost.setTimeout(() => { suppressClick = false; }, 0);
   }
 
   // Scrolls only the strip. scrollIntoView would also scroll
@@ -222,15 +268,23 @@
     on:touchcancel={handleTouchEndOrCancel}
   >
     {#each views as view, index (view.id)}
-      <button
+      <div
         class:active={view.id === activeViewId}
         class:icons-only={!showTitles}
+        class:dragging={draggedIndex === index}
+        class:drag-over={dragOverIndex === index}
         class="view-item"
         role="tab"
+        draggable="true"
+        data-view-index={index}
         aria-selected={view.id === activeViewId}
         tabindex={view.id === activeViewId ? 0 : -1}
         on:click={() => handleButtonClick(view.id, index)}
         on:keydown={(event) => handleKeydown(event, index)}
+        on:dragstart={(event) => onDragStart(event, index)}
+        on:dragover={(event) => onDragOver(event, index)}
+        on:drop={(event) => onDrop(event, index)}
+        on:dragend={onDragEnd}
         aria-label={view.name}
         title={view.name}
         bind:this={buttonRefs[index]}
@@ -239,7 +293,7 @@
         {#if showTitles}
           <span>{view.name}</span>
         {/if}
-      </button>
+      </div>
     {/each}
   </div>
   {#if canScrollRight && !$isTouchDevice}
@@ -350,7 +404,9 @@
     border: none;
     background: transparent;
     color: inherit;
-    cursor: pointer;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-drag: element;
     transition: all 0.2s ease;
     flex-shrink: 0;
     /* v3.2.1: Prevent visual pre-selection during native pan scroll */
@@ -361,8 +417,31 @@
     touch-action: manipulation;
   }
 
+  /* The icon and the label must not start a drag of their own. */
+  .view-item :global(*) {
+    -webkit-user-drag: none;
+    pointer-events: none;
+  }
+
+  .view-item:focus-visible {
+    outline: 0.125rem solid var(--interactive-accent);
+    outline-offset: 0.125rem;
+  }
+
   .view-item:hover {
     background: var(--background-modifier-hover);
+  }
+
+  .view-item:active {
+    cursor: grabbing;
+  }
+
+  .view-item.dragging {
+    opacity: 0.45;
+  }
+
+  .view-item.drag-over {
+    box-shadow: inset 0 -0.125rem 0 var(--interactive-accent);
   }
 
   .view-item.active {

@@ -20,6 +20,7 @@
     toggleAgenda: void;
     freezeColumns: void;
     viewChange: ViewId;
+    reorder: { from: number; to: number };
   }>();
 </script>
 
@@ -43,6 +44,7 @@
     {views}
     activeViewId={viewId}
     onSelect={(id) => dispatch("viewChange", id)}
+    onReorder={(from, to) => dispatch("reorder", { from, to })}
   />
 
   <div class="right">
