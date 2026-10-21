@@ -152,4 +152,23 @@ describe("getColumns — a missing group value leaves the board", () => {
     expect(shown).not.toContain("cleared");
     expect(shown).not.toContain("blank");
   });
+
+  test("does not draw a predefined or remembered lane that no note uses", () => {
+    const withOptions: DataField = {
+      ...field,
+      typeConfig: { options: ["环境", "版本"] },
+    };
+    const cols = getColumns(
+      [{ id: "a", values: { 分类: "环境" } }],
+      { 版本: { weight: 0 }, 环境: { weight: 1 } },
+      withOptions,
+      undefined,
+      false,
+      ["版本", "环境", "跑测"]
+    );
+
+    expect(cols.map((c) => c.id)).toEqual(["环境"]);
+    expect(cols[0]?.pinned).toBe(true);
+    expect(cols[0]?.persisted).toBe(true);
+  });
 });
