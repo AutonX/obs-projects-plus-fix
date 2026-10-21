@@ -5,10 +5,11 @@
   Menu,
   type ViewStateResult,
 } from "obsidian";
-import { get } from "svelte/store";
+import { get, type Unsubscriber } from "svelte/store";
 
 import App from "src/ui/app/App.svelte";
 import { i18n } from "./lib/stores/i18n";
+import { settings } from "src/lib/stores/settings";
 import { customViews } from "src/lib/stores/customViews";
 import { BoardView } from "src/ui/views/Board";
 import { CalendarView } from "src/ui/views/Calendar";
@@ -55,8 +56,21 @@ export class ProjectsView extends ItemView {
     return VIEW_TYPE_PROJECTS;
   }
 
+  private titleUnsub?: Unsubscriber;
+
   getDisplayText() {
-    return "Projects";
+    const name = get(settings).projects.find((project) => project.id === this.navigationState.projectId)?.name;
+    return name || "Projects";
+  }
+
+  /** Tab title and the inline heading both read getDisplayText. */
+  private refreshTitle(): void {
+    const leaf = this.leaf as WorkspaceLeaf & { updateHeader?: () => void };
+    leaf.updateHeader?.();
+    const root = this.containerEl.parentElement ?? this.containerEl;
+    root.querySelectorAll(".inline-title, .view-header-title").forEach((el) => {
+      el.textContent = this.getDisplayText();
+    });
   }
 
   getIcon() {
@@ -103,6 +117,7 @@ export class ProjectsView extends ItemView {
       projectId: this.navigationState.projectId || undefined,
       viewId: this.navigationState.viewId || undefined,
     });
+    this.refreshTitle();
 
     await super.setState(state, result);
   }
@@ -143,10 +158,14 @@ export class ProjectsView extends ItemView {
     this.component.$on("viewIdChange", (event: CustomEvent<string>) => {
       remember({ viewId: event.detail });
     });
+    this.titleUnsub = settings.subscribe(() => this.refreshTitle());
+    this.refreshTitle();
   }
 
    
   async onClose(): Promise<void> {
+    this.titleUnsub?.();
+    this.titleUnsub = undefined;
     if (this.component) {
       this.component.$destroy();
     }

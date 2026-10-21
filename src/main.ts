@@ -19,6 +19,7 @@ import { i18n, syncLocale } from "src/lib/stores/i18n";
 import { app, plugin } from "src/lib/stores/obsidian";
 import { watchViewport } from "src/lib/stores/ui";
 import { settings } from "src/lib/stores/settings";
+import { projectIdForFile } from "src/lib/projectForFile";
 import { CreateNoteModal } from "src/ui/modals/createNoteModal";
 import { CreateProjectModal } from "src/ui/modals/createProjectModal";
 import { createDemoWithNotices } from "src/ui/app/onboarding/demoRun";
@@ -193,9 +194,16 @@ export default class ProjectsPlusPlugin extends Plugin {
       `
     );
 
-    this.addRibbonIcon("projects-icon", t("obsidian.ribbon-tooltip"), () => {
+    const ribbonEl = this.addRibbonIcon("projects-icon", t("obsidian.ribbon-tooltip"), () => {
       void this.activateView();
     });
+    const syncRibbon = () => {
+      const open = this.app.workspace.getLeavesOfType(VIEW_TYPE_PROJECTS)
+        .some((leaf) => leaf.view?.getViewType() === VIEW_TYPE_PROJECTS);
+      ribbonEl.toggleClass("is-active", open);
+    };
+    this.registerEvent(this.app.workspace.on("layout-change", syncRibbon));
+    this.registerEvent(this.app.workspace.on("active-leaf-change", syncRibbon));
 
     this.registerView(
       VIEW_TYPE_PROJECTS,
@@ -1243,17 +1251,31 @@ export default class ProjectsPlusPlugin extends Plugin {
     settings.set(value);
   }
 
-  /**
-   * activateView opens the main Projects view in a new workspace leaf.
-   * */
+  /** Open the projects view, following the active note's folder. */
   activateView(projectId?: ProjectId, viewId?: ViewId): void {
     const leaf = this.getOrCreateLeaf();
+    const already = leaf.view?.getViewType() === VIEW_TYPE_PROJECTS;
+    const workspace = this.app.workspace as { activeLeaf?: WorkspaceLeaf };
+    const focused = workspace.activeLeaf === leaf;
+    const currentId = already
+      ? String((leaf.view as ProjectsView).getState()["projectId"] ?? "")
+      : "";
+    // Opening from a note follows that note's folder. Opening while this
+    // view is already focused keeps the folder the user just chose.
+    const requested = projectId ?? (focused
+      ? undefined
+      : projectIdForFile(get(settings).projects, this.app.workspace.getActiveFile()?.path));
+
+    if (already && viewId === undefined && (requested === undefined || requested === currentId)) {
+      void this.app.workspace.revealLeaf(leaf);
+      return;
+    }
 
     void leaf.setViewState({
       type: VIEW_TYPE_PROJECTS,
       active: true,
       state: {
-        projectId,
+        projectId: requested || currentId || undefined,
         viewId,
       },
     });

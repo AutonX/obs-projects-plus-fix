@@ -157,6 +157,7 @@ export class Menu {
   addItem(cb: (item: any) => any) {
     const item: any = {
       setTitle: jest.fn().mockReturnThis(),
+      setChecked: jest.fn().mockReturnThis(),
       setIcon: jest.fn().mockReturnThis(),
       setDisabled: jest.fn().mockReturnThis(),
       setSection: jest.fn().mockReturnThis(),

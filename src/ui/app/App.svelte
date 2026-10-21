@@ -32,6 +32,7 @@
   import { AddViewModal } from "src/ui/modals/addViewModal";
   import { ConfirmDialogModal } from "src/ui/modals/confirmDialog";
   import CompactNavBar from "src/ui/components/Navigation/CompactNavBar.svelte";
+  import ProjectRail from "src/ui/components/Navigation/ProjectRail.svelte";
   import SettingsMenuPopover from "src/ui/components/Navigation/SettingsMenu/SettingsMenuPopover.svelte";
   import { createDemoWithNotices } from "./onboarding/demoRun";
   import ProjectsEmptyState from "./ProjectsEmptyState.svelte";
@@ -342,6 +343,12 @@
     dispatch("viewIdChange", next);
   }
 
+  function selectProject(id: ProjectId) {
+    if (id === project?.id) return;
+    projectId = id;
+    dispatch("projectIdChange", id);
+  }
+
   function handleAddView(project: ProjectDefinition | undefined) {
     if (!project) return;
     new AddViewModal($app, project, (projectId, view) => {
@@ -407,6 +414,11 @@
 	the Toolbar.
 -->
 <div class="projects-container" style:--ppp-below-nav-h={belowNav}>
+  {#if projects.length > 0}
+    <ProjectRail {projects} projectId={project?.id} on:select={(event) => selectProject(event.detail)} />
+  {/if}
+  <div class="projects-stage">
+  <div class="projects-chrome">
   <CompactNavBar
     {views}
     viewId={view?.id}
@@ -423,6 +435,7 @@
     on:toggleAgenda={handleToggleAgenda}
     on:freezeColumns={handleFreezeColumns}
   />
+  </div>
 
   <div class="projects-main" bind:this={mainEl}>
     {#if project}
@@ -462,6 +475,7 @@
     renders conditionally, so nothing would catch it.
   -->
   <div class="ppp-app-overlay"></div>
+  </div>
 
   {#if settingsMenuOpen}
     <SettingsMenuPopover
@@ -543,11 +557,29 @@
      `overflow: hidden` still scrollable programmatically, the root could be
      shifted sideways. */
   .projects-container {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* View bar and content stay in this grid. The folder rail is a sibling,
+     so the vault file list is never replaced. The overlay shares row 2
+     with the main area. */
+  .projects-stage {
+    flex: 1 1 auto;
+    min-width: 0;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
     height: 100%;
     overflow: hidden;
+  }
+
+  .projects-chrome {
+    grid-row: 1;
+    grid-column: 1;
+    min-width: 0;
   }
 
   .projects-main {
