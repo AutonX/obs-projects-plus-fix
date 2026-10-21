@@ -97,7 +97,6 @@ export function createSchemaController(deps: SchemaControllerDeps): SchemaContro
         try {
           await deps.api.addField(field, value);
           persistFieldTypeConfig(field);
-          reopenSchema();
         } catch (err) {
           new Notice(noticeFor(ADD_FIELD_FAILED));
           console.warn("[Projects+] addField failed", err);
@@ -217,9 +216,8 @@ export function createSchemaController(deps: SchemaControllerDeps): SchemaContro
   }
 
   function reopenSchema() {
-    // Re-open on the next tick so the user remains anchored in the schema
-    // flow after editing or adding a field — keeps task continuity (no
-    // jarring jump back to an empty canvas).
+    // Re-open after a change that started in the schema list (configure,
+    // delete). Adding a field does not: the create modal closes onto the table.
     if (!alive) return;
     tick()
       .then(() => openSchema())

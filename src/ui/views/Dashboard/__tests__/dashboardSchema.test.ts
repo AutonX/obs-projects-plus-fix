@@ -28,7 +28,12 @@ jest.mock("src/ui/modals/configureField", () => ({
   ConfigureFieldModal: class { open() {} close() {} },
 }));
 jest.mock("src/ui/modals/schemaModal", () => ({
-  SchemaModal: class { open() {} close() {} },
+  SchemaModal: class {
+    open() {
+      mockSchemaOpen();
+    }
+    close() {}
+  },
 }));
 jest.mock("src/ui/modals/confirmDialog", () => ({
   ConfirmDialogModal: class { open() {} close() {} },
@@ -40,6 +45,7 @@ jest.mock("src/ui/modals/relationSetupModal", () => ({
 // jest refuses a mock factory that closes over anything but a `mock`-prefixed
 // name, so the spy carries the prefix the runner insists on.
 const mockUpdateFieldConfig = jest.fn();
+const mockSchemaOpen = jest.fn();
 jest.mock("src/lib/stores/settings", () => ({
   settings: {
     updateFieldConfig: (...args: unknown[]) => mockUpdateFieldConfig(...args),
@@ -50,6 +56,7 @@ jest.mock("src/lib/stores/settings", () => ({
 describe("#158 createSchemaController follows the project the canvas shows", () => {
   beforeEach(() => {
     mockUpdateFieldConfig.mockClear();
+    mockSchemaOpen.mockClear();
     capturedOnCreate = undefined;
   });
 
@@ -85,5 +92,25 @@ describe("#158 createSchemaController follows the project the canvas shows", () 
     // The failing assertion under the old, captured-id controller: it would
     // receive "project-A", the project selected when the controller was built.
     expect(mockUpdateFieldConfig.mock.calls[0]?.[0]).toBe("project-B");
+  });
+
+  test("creating a field does not reopen the schema modal", async () => {
+    const controller = createSchemaController({
+      app: {} as never,
+      api: { addField: jest.fn().mockResolvedValue({ written: 1, failed: [], missing: [] }) } as never,
+      getProjectId: () => "project-A",
+      t: (key, opts) => opts?.defaultValue ?? key,
+      getFields: () => [],
+      getRecords: () => [],
+      getProjects: () => [],
+    });
+
+    controller.openCreateField();
+    await capturedOnCreate?.(
+      { name: "分类", type: DataFieldType.String, repeated: false, identifier: false, derived: false },
+      ""
+    );
+
+    expect(mockSchemaOpen).not.toHaveBeenCalled();
   });
 });
