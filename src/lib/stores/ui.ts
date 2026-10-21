@@ -36,7 +36,7 @@ export const BREAKPOINTS = {
 // import time, before onload hands the plugin its App, so it hydrates when
 // the App arrives and only writes after that — never through the global app.
 function createPersistentStore<T>(key: string, initialValue: T) {
-  const storageKey = `obs-projects-plus-${key}`;
+  const storageKey = `obs-viewmaster-${key}`;
   const store = writable<T>(initialValue);
   let hydrated = false;
   appStore.subscribe((instance) => {

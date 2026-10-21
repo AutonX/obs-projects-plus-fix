@@ -56,7 +56,7 @@ function makeAdapter(): Fake {
 
 // Not a real config path: Obsidian's config folder is user-configurable, and the
 // lint rule that says so is right — nothing here depends on the folder's name.
-const DIR = "vault-config/plugins/obs-projects-plus";
+const DIR = "vault-config/plugins/obs-viewmaster";
 
 describe("#195 — the forensic copy of unreadable settings", () => {
   it("is written beside data.json, not inside it", async () => {

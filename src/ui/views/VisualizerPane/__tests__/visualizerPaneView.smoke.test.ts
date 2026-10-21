@@ -11,7 +11,7 @@ import {
  */
 describe("VIEW_TYPE_VISUALIZER_PANE", () => {
   it("uses a stable, prefixed identifier", () => {
-    expect(VIEW_TYPE_VISUALIZER_PANE).toBe("obs-projects-plus-visualizer");
+    expect(VIEW_TYPE_VISUALIZER_PANE).toBe("obs-viewmaster-visualizer");
   });
 });
 

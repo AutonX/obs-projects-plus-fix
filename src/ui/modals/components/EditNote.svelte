@@ -704,7 +704,7 @@
   }
 
   /* REFACTOR-305: keyboard focus ring is delegated to the global
-     `.obs-projects-plus :focus-visible` rule so mouse clicks don't
+     `.obs-viewmaster :focus-visible` rule so mouse clicks don't
      show a redundant outline on top of the title input's box-shadow. */
   .title-input:focus:not(:focus-visible) {
     outline: none;

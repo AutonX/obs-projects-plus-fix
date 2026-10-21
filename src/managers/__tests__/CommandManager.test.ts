@@ -52,7 +52,7 @@ describe("CommandManager", () => {
       
       // Access private method through any cast for testing
       const result = (commandManager as any).getShowCommandId(command, true);
-      expect(result).toBe("obs-projects-plus:show:test-project:test-view");
+      expect(result).toBe("obs-viewmaster:show:test-project:test-view");
     });
 
     it("should generate correct local command ID", () => {
@@ -72,7 +72,7 @@ describe("CommandManager", () => {
       const globalResult = (commandManager as any).getShowCommandId(command, true);
       const localResult = (commandManager as any).getShowCommandId(command, false);
       
-      expect(globalResult).toBe("obs-projects-plus:show:test-project");
+      expect(globalResult).toBe("obs-viewmaster:show:test-project");
       expect(localResult).toBe("show:test-project");
     });
   });
@@ -87,16 +87,16 @@ describe("CommandManager", () => {
 
     it("should filter plugin commands correctly", () => {
       mockApp.commands.commands = {
-        "obs-projects-plus:show:project1": {} as any,
-        "obs-projects-plus:show:project2": {} as any,
+        "obs-viewmaster:show:project1": {} as any,
+        "obs-viewmaster:show:project2": {} as any,
         "other-plugin:command": {} as any,
         "show:unrelated": {} as any,
       };
       
       const result = (commandManager as any).getRegisteredCommandIds();
       expect(result).toEqual(new Set([
-        "obs-projects-plus:show:project1",
-        "obs-projects-plus:show:project2"
+        "obs-viewmaster:show:project1",
+        "obs-viewmaster:show:project2"
       ]));
     });
   });
@@ -190,11 +190,11 @@ describe("CommandManager", () => {
     it("should remove commands that are no longer enabled", () => {
       const enabledCommands: ShowCommand[] = [];
       const projects: ProjectDefinition[] = [];
-      const registeredCommandIds = new Set(["obs-projects-plus:show:old-project"]);
+      const registeredCommandIds = new Set(["obs-viewmaster:show:old-project"]);
 
       (commandManager as any).removeRedundantCommands(enabledCommands, projects, registeredCommandIds);
 
-      expect(mockApp.commands.removeCommand).toHaveBeenCalledWith("obs-projects-plus:show:old-project");
+      expect(mockApp.commands.removeCommand).toHaveBeenCalledWith("obs-viewmaster:show:old-project");
     });
 
     it("should not remove commands that are still enabled", () => {
@@ -215,7 +215,7 @@ describe("CommandManager", () => {
           newNotesFolder: ""
         }
       ];
-      const registeredCommandIds = new Set(["obs-projects-plus:show:active-project"]);
+      const registeredCommandIds = new Set(["obs-viewmaster:show:active-project"]);
 
       (commandManager as any).removeRedundantCommands(enabledCommands, projects, registeredCommandIds);
 
@@ -227,11 +227,11 @@ describe("CommandManager", () => {
         { project: "deleted-project" }
       ];
       const projects: ProjectDefinition[] = [];
-      const registeredCommandIds = new Set(["obs-projects-plus:show:deleted-project"]);
+      const registeredCommandIds = new Set(["obs-viewmaster:show:deleted-project"]);
 
       (commandManager as any).removeRedundantCommands(enabledCommands, projects, registeredCommandIds);
 
-      expect(mockApp.commands.removeCommand).toHaveBeenCalledWith("obs-projects-plus:show:deleted-project");
+      expect(mockApp.commands.removeCommand).toHaveBeenCalledWith("obs-viewmaster:show:deleted-project");
     });
   });
 
@@ -279,7 +279,7 @@ describe("CommandManager", () => {
           newNotesFolder: ""
         }
       ];
-      const registeredCommandIds = new Set(["obs-projects-plus:show:existing-project"]);
+      const registeredCommandIds = new Set(["obs-viewmaster:show:existing-project"]);
 
       (commandManager as any).addMissingCommands(enabledCommands, projects, registeredCommandIds);
 
@@ -322,8 +322,8 @@ describe("CommandManager", () => {
 
       // Mock existing commands
       mockApp.commands.commands = {
-        "obs-projects-plus:show:old-project": {} as any,
-        "obs-projects-plus:show:project3": {} as any
+        "obs-viewmaster:show:old-project": {} as any,
+        "obs-viewmaster:show:project3": {} as any
       };
 
       commandManager.ensureCommands(enabledCommands, projects);

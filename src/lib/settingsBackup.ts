@@ -36,7 +36,7 @@ import type { App } from "obsidian";
 const BACKUP_PREFIX = "migration-backup-";
 
 function pluginDir(app: App): string {
-  return `${app.vault.configDir}/plugins/obs-projects-plus`;
+  return `${app.vault.configDir}/plugins/obs-viewmaster`;
 }
 
 /** Slug that identifies which view a backup belongs to. */

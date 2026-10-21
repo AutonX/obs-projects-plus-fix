@@ -28,7 +28,7 @@ import VisualizerPane from "./VisualizerPane.svelte";
  * property type editor) land in R1.2..R1.5.
  */
 
-export const VIEW_TYPE_VISUALIZER_PANE = "obs-projects-plus-visualizer";
+export const VIEW_TYPE_VISUALIZER_PANE = "obs-viewmaster-visualizer";
 
 export class VisualizerPaneView extends ItemView {
   private component?: VisualizerPane;

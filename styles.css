@@ -13,8 +13,8 @@
    ═══════════════════════════════════════════════════════════════ */
 
 /* Native select elements - inherit theme colors */
-.obs-projects-plus select,
-.workspace-leaf-content[data-type="obs-projects-plus"] select,
+.obs-viewmaster select,
+.workspace-leaf-content[data-type="obs-viewmaster"] select,
 .projects-modal select {
   background-color: var(--background-primary);
   color: var(--text-normal);
@@ -34,22 +34,22 @@
 }
 
 /* Select option styling for dark theme */
-.obs-projects-plus select option,
-.workspace-leaf-content[data-type="obs-projects-plus"] select option,
+.obs-viewmaster select option,
+.workspace-leaf-content[data-type="obs-viewmaster"] select option,
 .projects-modal select option {
   background-color: var(--background-primary);
   color: var(--text-normal);
 }
 
 /* Select hover/focus states */
-.obs-projects-plus select:hover,
-.workspace-leaf-content[data-type="obs-projects-plus"] select:hover,
+.obs-viewmaster select:hover,
+.workspace-leaf-content[data-type="obs-viewmaster"] select:hover,
 .projects-modal select:hover {
   border-color: var(--interactive-accent);
 }
 
-.obs-projects-plus select:focus,
-.workspace-leaf-content[data-type="obs-projects-plus"] select:focus,
+.obs-viewmaster select:focus,
+.workspace-leaf-content[data-type="obs-viewmaster"] select:focus,
 .projects-modal select:focus {
   outline: none;
   border-color: var(--interactive-accent);
@@ -61,10 +61,10 @@
    ═══════════════════════════════════════════════════════════════ */
 
 /* Screen reader only - visually hidden but accessible */
-.obs-projects-plus .sr-only,
-.obs-projects-plus .visually-hidden,
-.workspace-leaf-content[data-type="obs-projects-plus"] .sr-only,
-.workspace-leaf-content[data-type="obs-projects-plus"] .visually-hidden,
+.obs-viewmaster .sr-only,
+.obs-viewmaster .visually-hidden,
+.workspace-leaf-content[data-type="obs-viewmaster"] .sr-only,
+.workspace-leaf-content[data-type="obs-viewmaster"] .visually-hidden,
 /* announceChange's live region is appended to <body>, outside the scoped roots. */
 .ppp-sr-announce {
   position: absolute;
@@ -79,8 +79,8 @@
 }
 
 /* Skip link for keyboard navigation - SCOPED */
-.obs-projects-plus .skip-link,
-.workspace-leaf-content[data-type="obs-projects-plus"] .skip-link {
+.obs-viewmaster .skip-link,
+.workspace-leaf-content[data-type="obs-viewmaster"] .skip-link {
   position: absolute;
   top: -2.5rem;
   left: 0;
@@ -91,26 +91,26 @@
   transition: top 0.2s ease;
 }
 
-.obs-projects-plus .skip-link:focus,
-.workspace-leaf-content[data-type="obs-projects-plus"] .skip-link:focus {
+.obs-viewmaster .skip-link:focus,
+.workspace-leaf-content[data-type="obs-viewmaster"] .skip-link:focus {
   top: 0;
 }
 
 /* Focus visible enhancement - SCOPED to plugin elements */
-.obs-projects-plus :focus-visible,
-.workspace-leaf-content[data-type="obs-projects-plus"] :focus-visible {
+.obs-viewmaster :focus-visible,
+.workspace-leaf-content[data-type="obs-viewmaster"] :focus-visible {
   outline: 0.125rem solid var(--interactive-accent);
   outline-offset: 0.125rem;
 }
 
 /* Reduced motion preference - SCOPED to plugin only */
 @media (prefers-reduced-motion: reduce) {
-  .obs-projects-plus *,
-  .obs-projects-plus *::before,
-  .obs-projects-plus *::after,
-  .workspace-leaf-content[data-type="obs-projects-plus"] *,
-  .workspace-leaf-content[data-type="obs-projects-plus"] *::before,
-  .workspace-leaf-content[data-type="obs-projects-plus"] *::after {
+  .obs-viewmaster *,
+  .obs-viewmaster *::before,
+  .obs-viewmaster *::after,
+  .workspace-leaf-content[data-type="obs-viewmaster"] *,
+  .workspace-leaf-content[data-type="obs-viewmaster"] *::before,
+  .workspace-leaf-content[data-type="obs-viewmaster"] *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -120,10 +120,10 @@
 
 /* High contrast mode enhancements - SCOPED */
 @media (prefers-contrast: high) {
-  .obs-projects-plus .projects--board--card,
-  .obs-projects-plus .projects--board--column,
-  .workspace-leaf-content[data-type="obs-projects-plus"] .projects--board--card,
-  .workspace-leaf-content[data-type="obs-projects-plus"] .projects--board--column {
+  .obs-viewmaster .projects--board--card,
+  .obs-viewmaster .projects--board--column,
+  .workspace-leaf-content[data-type="obs-viewmaster"] .projects--board--card,
+  .workspace-leaf-content[data-type="obs-viewmaster"] .projects--board--column {
     border-width: var(--ppp-border-width-thick);
   }
 }
@@ -309,26 +309,26 @@
 }
 
 /* Disabled button states - SCOPED to plugin */
-.obs-projects-plus button:disabled,
-.obs-projects-plus button[disabled],
-.workspace-leaf-content[data-type="obs-projects-plus"] button:disabled,
-.workspace-leaf-content[data-type="obs-projects-plus"] button[disabled] {
+.obs-viewmaster button:disabled,
+.obs-viewmaster button[disabled],
+.workspace-leaf-content[data-type="obs-viewmaster"] button:disabled,
+.workspace-leaf-content[data-type="obs-viewmaster"] button[disabled] {
   opacity: 0.45;
   cursor: not-allowed;
   pointer-events: none;
 }
 
-.obs-projects-plus .view-header-left,
-.workspace-leaf-content[data-type="obs-projects-plus"] .view-header-left {
+.obs-viewmaster .view-header-left,
+.workspace-leaf-content[data-type="obs-viewmaster"] .view-header-left {
   display: none;
 }
 
-.obs-projects-plus .view-header-nav-buttons,
-.workspace-leaf-content[data-type="obs-projects-plus"] .view-header-nav-buttons {
+.obs-viewmaster .view-header-nav-buttons,
+.workspace-leaf-content[data-type="obs-viewmaster"] .view-header-nav-buttons {
   display: none;
 }
 
-.workspace-leaf-content[data-type="obs-projects-plus"] .view-content {
+.workspace-leaf-content[data-type="obs-viewmaster"] .view-content {
   padding: 0;
 }
 
@@ -343,8 +343,8 @@
 
 /* Mobile popover fixes - SCOPED to plugin only */
 @media (max-width: 48rem) {
-  .obs-projects-plus .projects--popover,
-  .workspace-leaf-content[data-type="obs-projects-plus"] .projects--popover {
+  .obs-viewmaster .projects--popover,
+  .workspace-leaf-content[data-type="obs-viewmaster"] .projects--popover {
     position: fixed;
     left: 0.5rem;
     right: 0.5rem;
@@ -360,8 +360,8 @@
   }
   
   /* Ensure popover content is scrollable */
-  .obs-projects-plus .projects--popover > *,
-  .workspace-leaf-content[data-type="obs-projects-plus"] .projects--popover > * {
+  .obs-viewmaster .projects--popover > *,
+  .workspace-leaf-content[data-type="obs-viewmaster"] .projects--popover > * {
     max-height: calc(60vh - 2rem);
     overflow-y: auto;
   }
@@ -374,16 +374,16 @@
 
 /* Mobile responsive styles - SCOPED to plugin */
 @media (max-width: 48rem) {
-  .obs-projects-plus .projects--board--column,
-  .workspace-leaf-content[data-type="obs-projects-plus"] .projects--board--column {
+  .obs-viewmaster .projects--board--column,
+  .workspace-leaf-content[data-type="obs-viewmaster"] .projects--board--column {
     /* Columns keep their width, allow horizontal scroll */
     flex-shrink: 0;
   }
 }
 
 @media (max-width: 30rem) {
-  .obs-projects-plus .projects--board,
-  .workspace-leaf-content[data-type="obs-projects-plus"] .projects--board {
+  .obs-viewmaster .projects--board,
+  .workspace-leaf-content[data-type="obs-viewmaster"] .projects--board {
     gap: 0 0.25rem;
     margin: 0.25rem;
   }
@@ -448,39 +448,39 @@
 
 /* Touch device optimizations - SCOPED to plugin only */
 @media (pointer: coarse) {
-  .obs-projects-plus .projects--board--card,
-  .obs-projects-plus .projects--gallery--card,
-  .workspace-leaf-content[data-type="obs-projects-plus"] .projects--board--card,
-  .workspace-leaf-content[data-type="obs-projects-plus"] .projects--gallery--card {
+  .obs-viewmaster .projects--board--card,
+  .obs-viewmaster .projects--gallery--card,
+  .workspace-leaf-content[data-type="obs-viewmaster"] .projects--board--card,
+  .workspace-leaf-content[data-type="obs-viewmaster"] .projects--gallery--card {
     min-height: 2.75rem;
   }
 
   /* v3.0.10: Active/tap state for touch (hover doesn't work on touch) */
-  .obs-projects-plus .projects--gallery--card:active,
-  .workspace-leaf-content[data-type="obs-projects-plus"] .projects--gallery--card:active {
+  .obs-viewmaster .projects--gallery--card:active,
+  .workspace-leaf-content[data-type="obs-viewmaster"] .projects--gallery--card:active {
     border-color: var(--interactive-accent);
     background-color: var(--background-modifier-hover);
     transition: background-color 80ms ease;
   }
 
-  .obs-projects-plus .projects--board--card:active,
-  .workspace-leaf-content[data-type="obs-projects-plus"] .projects--board--card:active {
+  .obs-viewmaster .projects--board--card:active,
+  .workspace-leaf-content[data-type="obs-viewmaster"] .projects--board--card:active {
     background: var(--background-primary-alt);
     box-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.08);
   }
 
   /* v3.0.10: Gallery card media — larger tap target on touch */
-  .obs-projects-plus .projects--gallery--card__media,
-  .workspace-leaf-content[data-type="obs-projects-plus"] .projects--gallery--card__media {
+  .obs-viewmaster .projects--gallery--card__media,
+  .workspace-leaf-content[data-type="obs-viewmaster"] .projects--gallery--card__media {
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
 
   /* Touch targets - SCOPED to plugin buttons only */
-  .obs-projects-plus button,
-  .obs-projects-plus .clickable-icon,
-  .workspace-leaf-content[data-type="obs-projects-plus"] button,
-  .workspace-leaf-content[data-type="obs-projects-plus"] .clickable-icon {
+  .obs-viewmaster button,
+  .obs-viewmaster .clickable-icon,
+  .workspace-leaf-content[data-type="obs-viewmaster"] button,
+  .workspace-leaf-content[data-type="obs-viewmaster"] .clickable-icon {
     min-height: 2.75rem;
     min-width: 2.75rem;
   }
@@ -494,8 +494,8 @@
 
 /* Mobile calendar day popup overlay - SCOPED */
 @media (max-width: 48rem) {
-  .obs-projects-plus .day-popup-overlay,
-  .workspace-leaf-content[data-type="obs-projects-plus"] .day-popup-overlay {
+  .obs-viewmaster .day-popup-overlay,
+  .workspace-leaf-content[data-type="obs-viewmaster"] .day-popup-overlay {
     position: fixed;
     top: 0;
     left: 0;

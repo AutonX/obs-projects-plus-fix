@@ -1,7 +1,7 @@
 import type { App } from "obsidian";
 import type { ProjectDefinition, ShowCommand } from "../settings/settings";
 
-const PROJECTS_PLUGIN_ID = "obs-projects-plus";
+const PROJECTS_PLUGIN_ID = "obs-viewmaster";
 const SHOW_COMMAND_PREFIX = `${PROJECTS_PLUGIN_ID}:show:`;
 
 export interface CommandRegistration {

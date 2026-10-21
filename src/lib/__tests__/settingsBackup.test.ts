@@ -13,7 +13,7 @@ import { countMigrationBackups, writeMigrationBackup } from "src/lib/settingsBac
 // Deliberately not the default config folder: the vault's config directory is
 // user-configurable, and the backup must follow `Vault#configDir`.
 const CONFIG_DIR = "my-config";
-const DIR = `${CONFIG_DIR}/plugins/obs-projects-plus`;
+const DIR = `${CONFIG_DIR}/plugins/obs-viewmaster`;
 
 function fakeApp(files: Record<string, string>, failWrite = false): App {
   return {

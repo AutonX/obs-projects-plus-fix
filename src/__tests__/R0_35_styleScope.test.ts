@@ -16,8 +16,8 @@
  *    contains `:global(…)` must ALSO carry either a local part (a scoped
  *    element, class or attribute outside the `:global`, which Svelte ties to
  *    the component) or a plugin-anchored class: `.projects-*`, `.projects--*`,
- *    `.ppp-*`, `.obsidian-projects-*`, `.board-*`, `.obs-projects-plus`, or
- *    `[data-type="obs-projects-plus"]`. Budget: exactly 0.
+ *    `.ppp-*`, `.obsidian-projects-*`, `.board-*`, `.obs-viewmaster`, or
+ *    `[data-type="obs-viewmaster"]`. Budget: exactly 0.
  * 2. **Root stylesheets.** Every selector in the root `styles.css` (what
  *    Obsidian loads) and in the token stylesheet under `src/ui/` (merged into
  *    it by the build) must be plugin-anchored. The one exemption is a `:root` /
@@ -236,7 +236,7 @@ export function hasLocalPart(rest: string): boolean {
 }
 
 const ANCHOR =
-  /\.(?:projects-|ppp-|obsidian-projects-|board-)[\w-]|\.obs-projects-plus(?![\w-])|\[data-type=(["']?)obs-projects-plus\1\]/;
+  /\.(?:projects-|ppp-|obsidian-projects-|board-)[\w-]|\.obs-viewmaster(?![\w-])|\[data-type=(["']?)obs-viewmaster\1\]/;
 
 /** Whether a selector names a plugin-owned class or the plugin's leaf type. A `:not()` does not anchor. */
 export function isPluginAnchored(selector: string): boolean {
@@ -467,8 +467,8 @@ describe("R0.35 — the reader (synthetic, proves both states)", () => {
     const anchored = [
       ":root { --ppp-a: 1; } body { --ppp-b: 2; }",
       "@media (pointer: coarse) { :root { --ppp-c: 3; } }",
-      ".obs-projects-plus select, .projects-modal select { y: 1; }",
-      '.workspace-leaf-content[data-type="obs-projects-plus"] .view-content { y: 1; }',
+      ".obs-viewmaster select, .projects-modal select { y: 1; }",
+      '.workspace-leaf-content[data-type="obs-viewmaster"] .view-content { y: 1; }',
       ".projects--board--column { y: 1; &:has(.x) { z: 2; } }",
       ":is(.projects-container, .ppp-modal) *::after { y: 1; }",
       "@keyframes ppp-fade { from { opacity: 0; } to { opacity: 1; } }",
@@ -535,7 +535,7 @@ describe("R0.35 — the tree", () => {
         `unanchored stylesheet selectors: ${offenders.length} > ${UNANCHORED_STYLESHEET_BUDGET}\n` +
           offenders.map((o) => `  ${o}`).join("\n") +
           "\n\nObsidian loads styles.css into the whole app. Scope the rule under a plugin root " +
-          '(`.workspace-leaf-content[data-type="obs-projects-plus"]`, `.projects-container`, ' +
+          '(`.workspace-leaf-content[data-type="obs-viewmaster"]`, `.projects-container`, ' +
           "a `.ppp-*` class); only a :root/body block of --ppp-* variables may stand alone."
       );
     }
