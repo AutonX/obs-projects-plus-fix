@@ -13,7 +13,9 @@ export class AddViewModal extends Modal {
   constructor(
     app: App,
     readonly project: ProjectDefinition,
-    readonly onSave: (projectId: ProjectId, view: ViewDefinition) => void
+    readonly onSave: (projectId: ProjectId, view: ViewDefinition) => void,
+    /** Project whose open data frame supplies the group-field list. */
+    readonly fieldProjectId: ProjectId
   ) {
     super(app);
     // ios-r1: the plugin root that tokens.css's touch input-size and
@@ -30,6 +32,7 @@ export class AddViewModal extends Modal {
       target: this.contentEl,
       props: {
         project: this.project,
+        fieldProjectId: this.fieldProjectId,
         onSave: (projectId: ProjectId, view: ViewDefinition) => {
           this.onSave(projectId, view);
           this.close();

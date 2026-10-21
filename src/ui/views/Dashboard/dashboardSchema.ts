@@ -158,7 +158,8 @@ export function createSchemaController(deps: SchemaControllerDeps): SchemaContro
     configModal.open();
   }
 
-  function openDeleteField(field: DataField) {
+  function openDeleteField(field: DataField, reopen: boolean) {
+    if (field.identifier || field.derived) return;
     new ConfirmDialogModal(
       deps.app,
       deps.t("modals.schema.delete-confirm.title"),
@@ -169,7 +170,7 @@ export function createSchemaController(deps: SchemaControllerDeps): SchemaContro
         // every note is reported before the schema claims the field is gone.
         await deps.api.deleteField(field.name);
         settings.deleteFieldConfig(deps.getProjectId(), field.name);
-        reopenSchema();
+        if (reopen) reopenSchema();
       }
     ).open();
   }
@@ -209,7 +210,7 @@ export function createSchemaController(deps: SchemaControllerDeps): SchemaContro
       },
       (field) => {
         schemaModal?.close();
-        openDeleteField(field);
+        openDeleteField(field, true);
       }
     );
     schemaModal.open();
@@ -231,6 +232,12 @@ export function createSchemaController(deps: SchemaControllerDeps): SchemaContro
   return {
     openSchema,
     openCreateField,
+    /** Column menu: confirm, then remove the property from the project and its notes. */
+    deleteField(fieldName: string) {
+      const field = deps.getFields().find((item) => item.name === fieldName);
+      if (!field) return;
+      openDeleteField(field, false);
+    },
     dispose() {
       alive = false;
       schemaModal?.close();

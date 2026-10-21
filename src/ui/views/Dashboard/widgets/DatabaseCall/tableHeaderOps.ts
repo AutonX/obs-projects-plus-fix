@@ -157,8 +157,9 @@ export function buildHeaderMenuEntries(opts: {
   onHide: () => void;
   onCalculate: (fn: ColumnAggregation | null) => void;
   onGroup: (group: boolean) => void;
+  onDelete?: () => void;
 }): ContextMenuEntry[] {
-  const { field, isPrimary, currentSort, currentCalc, groupedBy, t, onSort, onHide, onCalculate, onGroup } = opts;
+  const { field, isPrimary, currentSort, currentCalc, groupedBy, t, onSort, onHide, onCalculate, onGroup, onDelete } = opts;
   const entries: ContextMenuEntry[] = [
     { title: t("views.dashboard.table-v2.sort-asc", "Sort ascending"), icon: "arrow-up", onClick: () => onSort("asc"), disabled: currentSort === "asc" },
     { title: t("views.dashboard.table-v2.sort-desc", "Sort descending"), icon: "arrow-down", onClick: () => onSort("desc"), disabled: currentSort === "desc" },
@@ -188,6 +189,15 @@ export function buildHeaderMenuEntries(opts: {
   if (!isPrimary) {
     entries.push({ separator: true });
     entries.push({ title: t("views.dashboard.table-v2.hide-field", "Hide in view"), icon: "eye-off", onClick: onHide });
+  }
+  if (onDelete && !field.derived && !field.identifier) {
+    entries.push({ separator: true });
+    entries.push({
+      title: t("views.dashboard.table-v2.delete-property", "Delete property"),
+      icon: "trash",
+      danger: true,
+      onClick: onDelete,
+    });
   }
   return entries;
 }

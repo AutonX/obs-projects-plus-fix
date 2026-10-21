@@ -41,6 +41,7 @@ describe("commandBus", () => {
     const actions: import("src/lib/stores/commandBus").CommandBusAction[] = [
       "open-schema",
       "add-field",
+      "delete-field",
       "toggle-visualizer-pane",
       "open-visualizer-for-file",
       "add-relation",

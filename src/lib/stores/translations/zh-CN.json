@@ -519,7 +519,7 @@
                 },
                 "delete-confirm": {
                     "title": "删除字段",
-                    "message": "从项目中删除字段“{{name}}”？现有值将保留在笔记中，但不再显示在视图中。",
+                    "message": "从项目和所有笔记中删除属性「{{name}}」？笔记里的这个属性会被去掉，无法撤销。",
                     "cta": "删除"
                 },
                 "relation-summary": "→ {{project}}",
@@ -1523,6 +1523,7 @@
                     "calculate": "计算",
                     "calc-none": "无",
                     "hide-field": "在视图中隐藏",
+                    "delete-property": "删除属性",
                     "add-property": "添加属性",
                     "group-by": "按此字段分组",
                     "ungroup": "取消分组",

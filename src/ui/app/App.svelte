@@ -347,7 +347,7 @@
     new AddViewModal($app, project, (projectId, view) => {
       settings.addView(projectId, view);
       selectView(view.id);
-    }).open();
+    }, project.id).open();
   }
 
   let settingsMenuOpen = false;

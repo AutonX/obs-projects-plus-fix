@@ -81,7 +81,11 @@
     app: $app, api, getProjectId: () => project.id, t,
     getFields: () => frame.fields, getRecords: () => frame.records, getProjects: () => $settings.projects,
   });
-  const unsubCommands = subscribeCanvasCommands(() => schemaController.openSchema(), () => schemaController.openCreateField());
+  const unsubCommands = subscribeCanvasCommands(
+    () => schemaController.openSchema(),
+    () => schemaController.openCreateField(),
+    (fieldName) => schemaController.deleteField(fieldName)
+  );
   onDestroy(() => { unsubCommands(); schemaController.dispose(); }); // CV-2: nothing opens after the view is gone
   let isRecalculating = false, showFormulaBar = false, activeFilterTab: ActiveFilterTab | null = null;
   $: { void frame; isRecalculating = true; void Promise.resolve().then(() => { isRecalculating = false; }); }

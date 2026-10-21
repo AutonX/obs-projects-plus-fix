@@ -489,7 +489,7 @@
                 },
                 "delete-confirm": {
                     "title": "Delete field",
-                    "message": "Remove field “{{name}}” from this project? Existing values stay in your notes but will no longer appear in views.",
+                    "message": "Delete the property “{{name}}” from this project and from every note? This cannot be undone.",
                     "cta": "Delete"
                 },
                 "relation-summary": "→ {{project}}",
@@ -1444,6 +1444,7 @@
                     "filter-canvas": "Filter linked blocks by this row",
                     "group-by": "Group by this field",
                     "hide-field": "Hide in view",
+                    "delete-property": "Delete property",
                     "new": "New",
                     "new-name": "Note name…",
                     "open": "Open note",

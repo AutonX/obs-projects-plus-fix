@@ -68,4 +68,26 @@ describe("tableHeaderOps (F2.4)", () => {
     expect(titles(make(false))).toContain("Hide in view");
     expect(titles(make(true))).not.toContain("Hide in view");
   });
+
+  it("buildHeaderMenuEntries offers Delete property for a stored field only", () => {
+    const titlesOf = (f: DataField) =>
+      buildHeaderMenuEntries({
+        field: f,
+        isPrimary: false,
+        currentSort: null,
+        currentCalc: undefined,
+        groupedBy: false,
+        t: (_k, d) => d,
+        onSort: () => {},
+        onHide: () => {},
+        onCalculate: () => {},
+        onGroup: () => {},
+        onDelete: () => {},
+      })
+        .filter((e) => !("separator" in e && e.separator))
+        .map((e) => ("title" in e ? e.title : ""));
+    expect(titlesOf(field("分类", DataFieldType.String))).toContain("Delete property");
+    expect(titlesOf({ ...field("name", DataFieldType.String), derived: true })).not.toContain("Delete property");
+    expect(titlesOf({ ...field("id", DataFieldType.String), identifier: true })).not.toContain("Delete property");
+  });
 });

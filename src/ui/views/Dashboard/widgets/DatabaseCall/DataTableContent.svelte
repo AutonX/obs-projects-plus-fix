@@ -209,6 +209,7 @@
         on:resizeLive={(e) => (liveWidth = { field: e.detail.field, rem: e.detail.widthRem })}
         on:resizeCommit={handleResizeCommit}
         on:addProperty={() => emitCommand("add-field")}
+        on:deleteProperty={(e) => emitCommand("delete-field", { fieldName: e.detail })}
       />
       {#if start > 0}<div style:height={toRem(start * rowPx)} aria-hidden="true" />{/if}
       {#each windowed as row (row.kind === "record" ? row.record.id : `g:${row.key}`)}

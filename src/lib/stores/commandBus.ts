@@ -19,6 +19,7 @@ import { writable } from "svelte/store";
 export type CommandBusAction =
   | "open-schema"
   | "add-field"
+  | "delete-field"
   | "toggle-visualizer-pane"
   | "open-visualizer-for-file"
   | "add-relation";

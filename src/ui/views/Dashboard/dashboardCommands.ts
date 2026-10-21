@@ -20,7 +20,7 @@ export function hasCanvasCommandTarget(): boolean {
 
 /**
  * Subscribe to the global commandBus for canvas-level commands
- * (`open-schema`, `add-field`). Each ts-gated to prevent double-fire on
+ * (`open-schema`, `add-field`, `delete-field`). Each ts-gated to prevent double-fire on
  * repeated palette clicks.
  *
  * **A message sent before this subscription existed is not ours** (#186). The
@@ -39,7 +39,8 @@ export function hasCanvasCommandTarget(): boolean {
  */
 export function subscribeCanvasCommands(
   onOpenSchema: () => void,
-  onAddField: () => void
+  onAddField: () => void,
+  onDeleteField?: (fieldName: string) => void
 ): () => void {
   let lastCommandTs = get(commandBus)?.ts ?? 0;
   listeningCanvases++;
@@ -48,6 +49,10 @@ export function subscribeCanvasCommands(
     lastCommandTs = msg.ts;
     if (msg.action === "open-schema") onOpenSchema();
     else if (msg.action === "add-field") onAddField();
+    else if (msg.action === "delete-field") {
+      const fieldName = (msg.payload as { fieldName?: unknown } | undefined)?.fieldName;
+      if (typeof fieldName === "string" && fieldName) onDeleteField?.(fieldName);
+    }
   });
   let done = false;
   return () => {

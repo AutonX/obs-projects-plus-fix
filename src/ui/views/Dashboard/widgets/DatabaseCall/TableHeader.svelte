@@ -29,6 +29,7 @@
     resizeLive: { field: string; widthRem: number };
     resizeCommit: { field: string; widthRem: number };
     addProperty: void;
+    deleteProperty: string;
   }>();
 
   function sortOf(name: string): SortOrder | null {
@@ -50,6 +51,7 @@
         onHide: () => dispatch("hide", col.field.name),
         onCalculate: (fn) => dispatch("calculate", { field: col.field.name, fn }),
         onGroup: (group) => dispatch("group", { field: col.field.name, group }),
+        onDelete: () => dispatch("deleteProperty", col.field.name),
       }),
       e
     );

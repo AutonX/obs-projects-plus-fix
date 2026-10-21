@@ -99,6 +99,16 @@ describe("#186 — the bus replays its last message to every new subscriber", ()
     unsubscribe();
   });
 
+  it("forwards a delete-field command with the property name", () => {
+    const deleteField = jest.fn();
+    const unsubscribe = subscribeCanvasCommands(jest.fn(), jest.fn(), deleteField);
+
+    commandBus.set({ action: "delete-field", ts: 4, payload: { fieldName: "分类" } });
+
+    expect(deleteField).toHaveBeenCalledWith("分类");
+    unsubscribe();
+  });
+
   it("stops listening once unsubscribed", () => {
     const addField = jest.fn();
     subscribeCanvasCommands(jest.fn(), addField)();
