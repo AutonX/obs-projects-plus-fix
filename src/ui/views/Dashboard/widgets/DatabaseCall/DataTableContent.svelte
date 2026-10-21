@@ -16,6 +16,7 @@
   import { createEventDispatcher, getContext, onDestroy } from "svelte";
   import { get } from "svelte/store";
   import { i18n } from "src/lib/stores/i18n";
+  import TopHorizontalBar from "src/ui/components/TopHorizontalBar/TopHorizontalBar.svelte";
   import { app } from "src/lib/stores/obsidian";
   import { openRecord, modeFromEvent } from "src/lib/record/openRecord";
   import { settings as settingsStore } from "src/lib/stores/settings";
@@ -192,6 +193,7 @@
     on:search={(e) => (searchQuery = e.detail)}
     on:removeSort={handleRemoveSort}
   />
+  <TopHorizontalBar scroller={bodyEl} />
   <!-- UT-R2 #083: ONE scroll container for header+rows+footer — horizontal
        scroll moves them as a unit; header/footer stay sticky vertically. -->
   <div class="ppp-t2-scroll" bind:this={bodyEl} on:scroll={onScroll} role="rowgroup">

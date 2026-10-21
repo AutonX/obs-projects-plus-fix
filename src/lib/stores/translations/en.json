@@ -1550,6 +1550,9 @@
             }
         },
         "components": {
+            "top-hbar": {
+                "label": "Horizontal scroll"
+            },
             "filter-pills": {
                 "aria": "Filter",
                 "add": "Filter",

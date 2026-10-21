@@ -16,6 +16,7 @@
   import { ignoreHostSwipe } from "src/ui/actions/ignoreHostSwipe";
   import { remAt, rootFontPx, toRem } from "src/ui/utils/cssLength";
 
+  import TopHorizontalBar from "src/ui/components/TopHorizontalBar/TopHorizontalBar.svelte";
   import BoardColumn from "./BoardColumn.svelte";
   import NewColumn from "./NewColumn.svelte";
   import { horizontalBarScrollDelta } from "./horizontalBarWheel";
@@ -272,6 +273,8 @@
     };
   }
 
+  let boardScroller: HTMLElement | undefined;
+
   function handleResetZoom() {
     zoom = 1;
     onZoomChange(1);
@@ -280,7 +283,9 @@
 
 <!-- ios-g1 G2: interior swipes pan the board instead of opening Obsidian's
      drawer at the board's scroll boundary; edge swipes still reach the host. -->
-<div class="projects--board--container" use:wheelZoom use:ignoreHostSwipe>
+<div class="projects--board--frame">
+<TopHorizontalBar scroller={boardScroller} />
+<div class="projects--board--container" bind:this={boardScroller} use:wheelZoom use:ignoreHostSwipe>
   <div
     class="projects--board--viewport"
     style={zoom !== 1 ? `transform: scale(${zoom}); transform-origin: top left; width: ${100 / zoom}%; height: ${100 / zoom}%` : ""}
@@ -496,6 +501,7 @@
     {/if}
   </div>
 </div>
+</div>
 
 {#if zoom !== 1}
   <button
@@ -508,11 +514,20 @@
 {/if}
 
 <style>
+  .projects--board--frame {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+
   .projects--board--container {
     position: relative;
     overflow: auto;
     width: 100%;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     overscroll-behavior: contain;
     /* ios-s1: this box scrolls the board on both axes, and on a phone its
        bottom is under Obsidian's floating navbar. End space of the host's own

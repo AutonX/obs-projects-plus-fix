@@ -565,6 +565,9 @@
             }
         },
         "components": {
+            "top-hbar": {
+                "label": "Горизонтальная прокрутка"
+            },
             "filter-pills": {
                 "aria": "Фильтр",
                 "add": "Фильтр",

@@ -1646,6 +1646,9 @@
             }
         },
         "components": {
+            "top-hbar": {
+                "label": "左右滚动"
+            },
             "filter-pills": {
                 "aria": "筛选",
                 "add": "筛选",
