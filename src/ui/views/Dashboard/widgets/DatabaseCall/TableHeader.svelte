@@ -30,14 +30,75 @@
     resizeCommit: { field: string; widthRem: number };
     addProperty: void;
     deleteProperty: string;
+    reorder: { from: number; to: number };
   }>();
 
   function sortOf(name: string): SortOrder | null {
     return sortCriteria.find((c) => c.field === name)?.order ?? null;
   }
 
+  // Same native drag as the view tabs: this host does not deliver mouseup
+  // to the window, so a pointer tracker cannot finish a move. The header is a
+  // button, and a button refuses a drop unless dragover is cancelled on the
+  // button itself — cancelling it on the cell underneath never reaches it.
+  let draggedIndex: number | null = null;
+  let dragOverIndex: number | null = null;
+  let suppressClick = false;
+  let committed = false;
+
+  function onDragStart(event: DragEvent, index: number) {
+    if (readonly || columns[index]?.isPrimary) {
+      event.preventDefault();
+      return;
+    }
+    committed = false;
+    draggedIndex = index;
+    dragOverIndex = null;
+    event.stopPropagation();
+    const transfer = event.dataTransfer;
+    if (!transfer) return;
+    transfer.effectAllowed = "move";
+    try { transfer.setData("text/plain", String(index)); } catch { /* the move still proceeds */ }
+  }
+
+  function onDragOver(event: DragEvent, index: number) {
+    if (draggedIndex === null) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+    dragOverIndex = index === draggedIndex ? null : index;
+  }
+
+  function commitMove(to: number | null) {
+    const from = draggedIndex;
+    if (committed || from === null || to === null || from === to || from <= 0) return;
+    committed = true;
+    dispatch("reorder", { from, to });
+  }
+
+  function onDrop(event: DragEvent, index: number) {
+    event.preventDefault();
+    event.stopPropagation();
+    commitMove(index);
+  }
+
+  function onDragEnd(event: DragEvent) {
+    let to = dragOverIndex;
+    if (to === null && (event.clientX !== 0 || event.clientY !== 0)) {
+      const hit = event.view?.document.elementFromPoint(event.clientX, event.clientY);
+      const cell = hit?.closest?.("[data-col-index]");
+      const index = cell ? Number(cell.getAttribute("data-col-index")) : NaN;
+      if (Number.isInteger(index)) to = index;
+    }
+    commitMove(to);
+    draggedIndex = null;
+    dragOverIndex = null;
+    suppressClick = true;
+    setTimeout(() => { suppressClick = false; }, 0);
+  }
+
   function openMenu(col: TableColumn, e: MouseEvent) {
-    if (readonly) return;
+    if (readonly || suppressClick) return;
     const t = (k: string, d: string) => $i18n.t(k, { defaultValue: d });
     openContextMenu(
       buildHeaderMenuEntries({
@@ -69,16 +130,31 @@
 </script>
 
 <div class="ppp-t2-header" role="row">
-  {#each columns as col (col.field.name)}
+  {#each columns as col, i (col.field.name)}
     {@const sort = sortOf(col.field.name)}
     <div
       class="ppp-t2-header-cell"
       class:ppp-t2-header-cell--interactive={!readonly}
+      class:ppp-t2-header-cell--dragging={draggedIndex === i}
+      class:ppp-t2-header-cell--drag-over={dragOverIndex === i}
       role="columnheader"
+      tabindex="-1"
+      data-col-index={i}
+      draggable={!readonly && !col.isPrimary}
       aria-sort={sort === "asc" ? "ascending" : sort === "desc" ? "descending" : "none"}
       title={`${col.field.name} · ${$i18n.t(`data-types.${col.field.type}`, { defaultValue: col.field.type })}`}
+      on:dragstart={(e) => onDragStart(e, i)}
+      on:dragover={(e) => onDragOver(e, i)}
+      on:drop={(e) => onDrop(e, i)}
+      on:dragend={onDragEnd}
     >
-      <button class="ppp-t2-header-btn" on:click={(e) => openMenu(col, e)} disabled={readonly}>
+      <button
+        class="ppp-t2-header-btn"
+        on:click={(e) => openMenu(col, e)}
+        on:dragover={(e) => onDragOver(e, i)}
+        on:drop={(e) => onDrop(e, i)}
+        disabled={readonly}
+      >
         <span class="ppp-t2-header-icon"><Icon name={getFieldIcon(col.field.type)} size="sm" /></span>
         <span class="ppp-t2-header-name">{col.field.name}</span>
         {#if sort}
@@ -147,6 +223,18 @@
 
   .ppp-t2-header-cell--interactive .ppp-t2-header-btn:hover {
     background: var(--ppp-db-surface-hover, var(--background-modifier-hover));
+  }
+
+  .ppp-t2-header-cell[draggable="true"] .ppp-t2-header-btn {
+    cursor: grab;
+  }
+
+  .ppp-t2-header-cell--dragging {
+    opacity: 0.45;
+  }
+
+  .ppp-t2-header-cell--drag-over {
+    box-shadow: inset 0.125rem 0 0 var(--interactive-accent);
   }
 
   .ppp-t2-header-icon {

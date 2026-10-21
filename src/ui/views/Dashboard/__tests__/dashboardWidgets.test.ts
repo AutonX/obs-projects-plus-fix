@@ -160,6 +160,36 @@ describe("createWidgetController.removeWidget — undo (scene 5 live acceptance)
   });
 });
 
+describe("createWidgetController — a second save in the same turn (#158)", () => {
+  it("keeps a column order when the widget save still sees the pre-save config", () => {
+    const table = widget("t", "Table");
+    table.type = "data-table";
+    let live = makeConfig([table]);
+    const stale = live;
+    const saves: DatabaseViewConfig[] = [];
+    const controller = createWidgetController({
+      getConfig: () => stale,
+      saveConfig: (cfg: DatabaseViewConfig) => {
+        saves.push(cfg);
+        live = cfg;
+      },
+      i18nStore: makeI18nStore() as never,
+    });
+
+    controller.handleTableConfigChange(new CustomEvent("tableConfigChange", {
+      detail: { orderFields: ["name", "状态", "分类"] },
+    }));
+    controller.handleWidgetConfigChange(new CustomEvent("configChange", {
+      detail: { id: "t", changes: { config: { subFilter: { conjunction: "and", conditions: [] } } } },
+    }));
+
+    const final = saves[saves.length - 1];
+    expect(final?.table?.orderFields).toEqual(["name", "状态", "分类"]);
+    expect(final?.widgets[0]?.config).toEqual({ subFilter: { conjunction: "and", conditions: [] } });
+    expect(live.table?.orderFields).toEqual(["name", "状态", "分类"]);
+  });
+});
+
 // Sanity check for the `t(key, options)` double used above: production code
 // reads `get(i18nStore).t`, so the double must support the same call shape.
 describe("makeI18nStore double", () => {

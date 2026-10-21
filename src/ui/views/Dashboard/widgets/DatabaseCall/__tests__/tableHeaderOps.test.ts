@@ -5,6 +5,7 @@
 import { DataFieldType, type DataField } from "src/lib/dataframe/dataframe";
 import {
   applySortPatch,
+  applyColumnOrderPatch,
   applyHidePatch,
   applyWidthPatch,
   applyCalculatePatch,
@@ -23,6 +24,20 @@ describe("tableHeaderOps (F2.4)", () => {
     expect(next.sortCriteria).toEqual([{ field: "mrr", order: "desc" }]);
     expect(next.sortField).toBeUndefined();
     expect(applySortPatch(next, "mrr", null).sortCriteria).toEqual([]);
+  });
+
+  it("applyColumnOrderPatch moves a column and keeps the name column first", () => {
+    const names = ["name", "分类", "状态", "版本"];
+    expect(applyColumnOrderPatch(undefined, names, 3, 1)?.orderFields).toEqual(["name", "版本", "分类", "状态"]);
+    expect(applyColumnOrderPatch(undefined, names, 2, 0)?.orderFields).toEqual(["name", "状态", "分类", "版本"]);
+    expect(applyColumnOrderPatch(undefined, names, 0, 2)).toBeNull();
+    expect(applyColumnOrderPatch({ orderFields: ["name", "隐藏"] } as DataTableConfig, names, 1, 2)?.orderFields).toEqual([
+      "name",
+      "状态",
+      "分类",
+      "版本",
+      "隐藏",
+    ]);
   });
 
   it("applyHidePatch hides a field preserving other field config", () => {

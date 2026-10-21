@@ -61,6 +61,28 @@ export function applySortPatch(
   return { ...rest, sortCriteria: criteria };
 }
 
+/**
+ * New `orderFields` after dragging a displayed column onto another.
+ * Index 0 is the pinned name column and does not move. Dropping onto it
+ * places the column immediately after the name. Hidden names already stored
+ * stay at the end so they are not forgotten.
+ */
+export function applyColumnOrderPatch(
+  config: DataTableConfig | undefined,
+  displayed: readonly string[],
+  from: number,
+  to: number
+): DataTableConfig | null {
+  if (from <= 0 || from === to || from >= displayed.length || to < 0 || to >= displayed.length) return null;
+  const next = displayed.slice();
+  const [moved] = next.splice(from, 1);
+  if (!moved) return null;
+  next.splice(to === 0 ? 1 : to, 0, moved);
+  const shown = new Set(next);
+  const kept = (config?.orderFields ?? []).filter((name) => !shown.has(name));
+  return { ...config, orderFields: [...next, ...kept] };
+}
+
 export function applyHidePatch(config: DataTableConfig | undefined, field: string): DataTableConfig {
   return {
     ...config,

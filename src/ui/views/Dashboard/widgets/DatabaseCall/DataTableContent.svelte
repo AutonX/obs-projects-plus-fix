@@ -34,7 +34,7 @@
   import { toRem } from "src/ui/utils/cssLength";
   import { renameTableNote } from "./noteRename";
   import { buildRowMenuEntries, createNamedRecord, isRowDriving, toggleRowSelection } from "./tableRowOps";
-  import { applySortPatch, applyHidePatch, applyCalculatePatch, applyWidthPatch, applyGroupPatch, toggleGroupCollapsed, optionPools } from "./tableHeaderOps";
+  import { applySortPatch, applyHidePatch, applyCalculatePatch, applyWidthPatch, applyGroupPatch, applyColumnOrderPatch, toggleGroupCollapsed, optionPools } from "./tableHeaderOps";
   import {
     buildColumns,
     gridTemplate,
@@ -212,6 +212,10 @@
         on:resizeCommit={handleResizeCommit}
         on:addProperty={() => emitCommand("add-field")}
         on:deleteProperty={(e) => emitCommand("delete-field", { fieldName: e.detail })}
+        on:reorder={(e) => {
+          const next = applyColumnOrderPatch(config, columns.map((col) => col.field.name), e.detail.from, e.detail.to);
+          if (next) dispatch("configChange", next);
+        }}
       />
       {#if start > 0}<div style:height={toRem(start * rowPx)} aria-hidden="true" />{/if}
       {#each windowed as row (row.kind === "record" ? row.record.id : `g:${row.key}`)}

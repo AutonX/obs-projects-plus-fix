@@ -49,8 +49,33 @@ export function createWidgetController({
   saveConfig,
   i18nStore,
 }: WidgetControllerOptions): WidgetController {
-  function cfg() {
-    return getConfig();
+  // getConfig() is the canvas projection. It lags a save until the next tick
+  // (#158). A column change saves the table and then the widget in the same
+  // turn; the second read must see the first save, or it writes the old table
+  // back and the new column order disappears.
+  let ahead: DatabaseViewConfig | undefined;
+  let staleBase: DatabaseViewConfig | undefined;
+
+  function cfg(): DatabaseViewConfig | undefined {
+    const live = getConfig();
+    if (!ahead) return live;
+    if (live === ahead || sameConfig(live, ahead)) {
+      ahead = undefined;
+      staleBase = undefined;
+      return live;
+    }
+    // Still the object from before this turn's first save.
+    if (live === staleBase) return ahead;
+    ahead = undefined;
+    staleBase = undefined;
+    return live;
+  }
+
+  function publish(next: DatabaseViewConfig): DatabaseViewConfig {
+    if (!ahead) staleBase = getConfig();
+    ahead = next;
+    saveConfig(next);
+    return next;
   }
 
   function addWidget(
@@ -73,8 +98,7 @@ export function createWidgetController({
       ...initialConfig,
     };
     const next: DatabaseViewConfig = { ...config, widgets: [...config.widgets, newWidget] };
-    saveConfig(next);
-    return next;
+    return publish(next);
   }
 
   function removeWidget(id: string): void {
@@ -83,11 +107,11 @@ export function createWidgetController({
     const index = config.widgets.findIndex((w) => w.id === id);
     if (index === -1) return;
     const removed = config.widgets[index]!;
-    saveConfig({
+    publish({
       ...config,
       widgets: config.widgets.filter((w) => w.id !== id),
     });
-    notifyWidgetRemoved((key, options) => get(i18nStore).t(key, options), removed, index, cfg, saveConfig);
+    notifyWidgetRemoved((key, options) => get(i18nStore).t(key, options), removed, index, cfg, publish);
   }
 
   function handleWidgetConfigChange(
@@ -98,13 +122,13 @@ export function createWidgetController({
     const updated = config.widgets.map((w) =>
       w.id === e.detail.id ? { ...w, ...e.detail.changes } : w
     );
-    saveConfig({ ...config, widgets: updated });
+    publish({ ...config, widgets: updated });
   }
 
   function handleTableConfigChange(e: CustomEvent<unknown>): void {
     const config = cfg();
     if (!config) return;
-    saveConfig({ ...config, table: e.detail as DatabaseViewConfig["table"] });
+    publish({ ...config, table: e.detail as DatabaseViewConfig["table"] });
   }
 
   function applyFormulaField(name: string, expression: string): void {
@@ -114,8 +138,17 @@ export function createWidgetController({
     const updated = existing.some((f) => f.name === name)
       ? existing.map((f) => (f.name === name ? { ...f, expression } : f))
       : [...existing, { name, expression }];
-    saveConfig({ ...config, formulaFields: updated });
+    publish({ ...config, formulaFields: updated });
   }
 
   return { addWidget, removeWidget, handleWidgetConfigChange, handleTableConfigChange, applyFormulaField };
+}
+
+function sameConfig(a: DatabaseViewConfig | undefined, b: DatabaseViewConfig | undefined): boolean {
+  if (a === b) return true;
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
+  }
 }
