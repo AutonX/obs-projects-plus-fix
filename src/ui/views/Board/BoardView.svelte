@@ -340,16 +340,10 @@
     (columns, name) => {
       if (!field) return;
 
-      settings.updateFieldConfig(
-        project.id,
-        field.name,
-        fields.map((f) => f.name),
-        {
-          ...field?.typeConfig,
-          options: [...(field.typeConfig?.options ?? []), name],
-        }
-      );
-
+      // A new lane is an ordinary column: it is not added to field options,
+      // which is what marks a column pinned. It stays empty until a note
+      // uses the name, and sorts after every column that is already shown,
+      // directly before the add-list control.
       saveConfig({
         ...config,
         persistedStatuses: [...new Set([...(config?.persistedStatuses ?? []), name])],

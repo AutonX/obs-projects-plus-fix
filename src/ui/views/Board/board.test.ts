@@ -153,7 +153,7 @@ describe("getColumns — a missing group value leaves the board", () => {
     expect(shown).not.toContain("blank");
   });
 
-  test("does not draw a predefined or remembered lane that no note uses", () => {
+  test("draws a persisted lane even when no note uses it", () => {
     const withOptions: DataField = {
       ...field,
       typeConfig: { options: ["环境", "版本"] },
@@ -167,8 +167,34 @@ describe("getColumns — a missing group value leaves the board", () => {
       ["版本", "环境", "跑测"]
     );
 
+    expect(cols.map((c) => c.id)).toEqual(["版本", "跑测", "环境"]);
+    expect(cols.find((c) => c.id === "版本")).toMatchObject({
+      records: [],
+      pinned: true,
+      persisted: true,
+    });
+    expect(cols.find((c) => c.id === "跑测")).toMatchObject({
+      records: [],
+      pinned: false,
+      persisted: true,
+    });
+    expect(cols.find((c) => c.id === "环境")?.records.map((r) => r.id)).toEqual(["a"]);
+  });
+
+  test("does not draw an unused field option that was not persisted", () => {
+    const withOptions: DataField = {
+      ...field,
+      typeConfig: { options: ["环境", "版本"] },
+    };
+    const cols = getColumns(
+      [{ id: "a", values: { 分类: "环境" } }],
+      {},
+      withOptions,
+      undefined,
+      false,
+      ["环境"]
+    );
+
     expect(cols.map((c) => c.id)).toEqual(["环境"]);
-    expect(cols[0]?.pinned).toBe(true);
-    expect(cols[0]?.persisted).toBe(true);
   });
 });

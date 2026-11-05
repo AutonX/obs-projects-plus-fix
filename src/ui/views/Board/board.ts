@@ -71,10 +71,12 @@ export function getColumns(
     predefs = new Set(grouByField.typeConfig?.options);
   }
 
-  // A column is a value some note actually has. Field options and
-  // persistedStatuses still decide pin state and order, but a remembered
-  // lane with no notes is not drawn.
+  // A column is a value some note has, or a lane the user added / marked
+  // persisted. Unused field options stay off the board until then.
   const columns = new Set(Object.keys(groupedRecords));
+  for (const name of persistedStatuses ?? []) {
+    if (typeof name === "string" && name.trim() !== "") columns.add(name);
+  }
 
   return [...columns]
     .sort((a, b) => {
@@ -111,8 +113,7 @@ export function getColumns(
         pinned: grouByField?.typeConfig?.options?.includes(column) ?? false,
         persisted: persistedStatuses?.includes(column) ?? false,
       };
-    })
-    .filter((column) => column.records.length > 0);
+    });
 }
 
 function groupRecordsByField(
