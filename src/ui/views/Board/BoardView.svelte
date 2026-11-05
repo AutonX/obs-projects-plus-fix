@@ -14,6 +14,7 @@
   import { Notice } from "obsidian";
   import type { ViewApi } from "src/lib/viewApi";
   import type { ProjectDefinition } from "src/settings/settings";
+  import { ConfirmDialogModal } from "src/ui/modals/confirmDialog";
   import { CreateNoteModal } from "src/ui/modals/createNoteModal";
   import { EditNoteModal } from "src/ui/modals/editNoteModal";
   import {
@@ -357,42 +358,62 @@
 
   const handleColumnDelete =
     (field: DataField | undefined): OnColumnDelete =>
-    async (columns, name, records) => {
+    (columns, name, records) => {
       if (dataReadOnly) return;
       if (!field) return;
+      const groupField = field;
 
-      const newRecords = records.map((record) =>
-        updateRecordValues(record, {
-          [field.name]: null,
-        })
-      );
-
-      await api.updateRecords(newRecords, fields);
-
-      if (field.typeConfig && field.typeConfig.options) {
-        let options = [...field.typeConfig.options];
-        settings.updateFieldConfig(
-          project.id,
-          field.name,
-          fields.map((f) => f.name),
-          {
-            ...field.typeConfig,
-            options: options.filter((v) => v !== name),
-          }
-        );
-      }
-
-      saveConfig({
-        ...config,
-        persistedStatuses: (config?.persistedStatuses ?? []).filter(s => s !== name),
-        columns: Object.fromEntries(
-          columns
-            .filter((v) => v !== name)
-            .map((column, i) => {
-              return [column, { ...config?.columns?.[column], weight: i }];
+      const removeColumn = async (deleteNotes: boolean) => {
+        if (deleteNotes) {
+          for (const record of records) api.deleteRecord(record.id);
+        } else if (records.length > 0) {
+          const newRecords = records.map((record) =>
+            updateRecordValues(record, {
+              [groupField.name]: null,
             })
-        ),
-      });
+          );
+
+          await api.updateRecords(newRecords, fields);
+        }
+
+        if (groupField.typeConfig && groupField.typeConfig.options) {
+          const options = [...groupField.typeConfig.options];
+          settings.updateFieldConfig(
+            project.id,
+            groupField.name,
+            fields.map((f) => f.name),
+            {
+              ...groupField.typeConfig,
+              options: options.filter((v) => v !== name),
+            }
+          );
+        }
+
+        saveConfig({
+          ...config,
+          persistedStatuses: (config?.persistedStatuses ?? []).filter(s => s !== name),
+          columns: Object.fromEntries(
+            columns
+              .filter((v) => v !== name)
+              .map((column, i) => {
+                return [column, { ...config?.columns?.[column], weight: i }];
+              })
+          ),
+        });
+      };
+
+      new ConfirmDialogModal(
+        $app,
+        $i18n.t("components.board.column.delete"),
+        $i18n.t("components.board.column.delete-confirm", { name }),
+        $i18n.t("modals.confirm.delete"),
+        (deleteNotes) => {
+          void removeColumn(deleteNotes);
+        },
+        records.length > 0
+          ? $i18n.t("components.board.column.delete-notes-check")
+          : undefined
+      ).open();
     };
 
   const handleColumnRename =

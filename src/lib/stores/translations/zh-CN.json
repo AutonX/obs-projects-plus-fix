@@ -1694,6 +1694,8 @@
                     },
                     "rename": "重命名列表",
                     "delete": "删除列表",
+                    "delete-confirm": "确定删除列表「{{name}}」？",
+                    "delete-notes-check": "同时删除其中的笔记",
                     "expand": "展开列表",
                     "collapse": "折叠列表",
                     "pin": "固定列表",

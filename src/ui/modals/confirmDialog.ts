@@ -10,7 +10,8 @@ export class ConfirmDialogModal extends Modal {
     readonly title: string,
     readonly message: string,
     readonly cta: string,
-    readonly onConfirm: () => void | Promise<void>
+    readonly onConfirm: (checked: boolean) => void | Promise<void>,
+    readonly checkboxLabel?: string
   ) {
     super(app);
     // Shared plugin modal root: phone input size, reduced motion (tokens.css).
@@ -24,8 +25,9 @@ export class ConfirmDialogModal extends Modal {
         title: this.title,
         message: this.message,
         cta: this.cta,
-        onConfirm: () => {
-          void this.onConfirm();
+        checkboxLabel: this.checkboxLabel,
+        onConfirm: (checked: boolean) => {
+          void this.onConfirm(checked);
           this.close();
         },
         onCancel: () => {
