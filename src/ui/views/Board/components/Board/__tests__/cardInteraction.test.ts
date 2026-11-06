@@ -135,28 +135,34 @@ describe("cards-g2 — the keyed wrapper is the drag item", () => {
 });
 
 describe("cards-g2 — what a click does on each part of a board card", () => {
-  it("a click on the body opens that card's record", () => {
+  it("a click on the body opens the note", () => {
     const m = mountCards();
     m.card(1).querySelector(".color-item")?.dispatchEvent(click());
-    expect(m.onRecordClick).toHaveBeenCalledTimes(1);
-    expect(m.onRecordClick).toHaveBeenCalledWith(m.items[1]);
+    expect(openRecord).toHaveBeenCalledTimes(1);
+    expect(openRecord).toHaveBeenCalledWith({ id: "b.md", sourcePath: "b.md" }, "same", expect.anything());
     m.card(0).dispatchEvent(click());
-    expect(m.onRecordClick).toHaveBeenCalledTimes(2);
-    expect(m.onRecordClick).toHaveBeenLastCalledWith(m.items[0]);
+    expect(openRecord).toHaveBeenCalledTimes(2);
+    expect(openRecord).toHaveBeenLastCalledWith({ id: "a.md", sourcePath: "a.md" }, "same", expect.anything());
+    expect(m.onRecordClick).not.toHaveBeenCalled();
     m.destroy();
   });
 
-  it("a right click offers delete and does not open the card", () => {
+  it("a right click offers metadata editing, then delete, and does not open the note", () => {
     const onRecordDelete = jest.fn();
     const m = mountCards({ onRecordDelete });
     openContextMenu.mockClear();
     m.card(0).dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
     expect(m.onRecordClick).not.toHaveBeenCalled();
+    expect(openRecord).not.toHaveBeenCalled();
     expect(openContextMenu).toHaveBeenCalledTimes(1);
     const [entries] = openContextMenu.mock.calls[0] as [{ title: string; danger?: boolean; onClick: () => void }[]];
-    expect(entries[0]?.title).toBe("views.board.note.delete");
-    expect(entries[0]?.danger).toBe(true);
+    expect(entries[0]?.title).toBe("modals.note.edit.title");
+    expect(entries[0]?.danger).toBeUndefined();
     entries[0]?.onClick();
+    expect(m.onRecordClick).toHaveBeenCalledWith(m.items[0]);
+    expect(entries[1]?.title).toBe("views.board.note.delete");
+    expect(entries[1]?.danger).toBe(true);
+    entries[1]?.onClick();
     expect(onRecordDelete).toHaveBeenCalledWith(m.items[0]);
     m.destroy();
   });
@@ -176,6 +182,7 @@ describe("cards-g2 — what a click does on each part of a board card", () => {
     grip.dispatchEvent(click());
     grip.querySelector(".board-card-grip-glyph")?.dispatchEvent(click());
     expect(m.onRecordClick).not.toHaveBeenCalled();
+    expect(openRecord).not.toHaveBeenCalled();
     m.destroy();
   });
 
@@ -189,23 +196,16 @@ describe("cards-g2 — what a click does on each part of a board card", () => {
     expect(m.onRecordCheck).toHaveBeenCalledTimes(1);
     expect(m.onRecordCheck).toHaveBeenCalledWith(m.items[0], true);
     expect(m.onRecordClick).not.toHaveBeenCalled();
+    expect(openRecord).not.toHaveBeenCalled();
     m.destroy();
   });
 
-  it("the pencil opens the record once, not again through the card", () => {
-    const m = mountCards();
-    const pencil = m.card(0).querySelector<HTMLElement>(".edit-hint .clickable-icon");
-    expect(pencil).toHaveAttribute("aria-label", "components.note.edit");
-    pencil?.dispatchEvent(click());
-    expect(m.onRecordClick).toHaveBeenCalledTimes(1);
-    expect(m.onRecordClick).toHaveBeenCalledWith(m.items[0]);
-    m.destroy();
-  });
-
-  it("on read-only data the pencil says it opens the note", () => {
+  it("a read-only card opens the note and has no pencil", () => {
     const m = mountCards({ readOnly: true });
-    const pencil = m.card(0).querySelector<HTMLElement>(".edit-hint .clickable-icon");
-    expect(pencil).toHaveAttribute("aria-label", "common.open-note");
+    expect(m.card(0).querySelector(".edit-hint")).toBeNull();
+    m.card(0).querySelector(".color-item")?.dispatchEvent(click());
+    expect(openRecord).toHaveBeenCalledWith({ id: "a.md", sourcePath: "a.md" }, "same", expect.anything());
+    expect(m.onRecordClick).not.toHaveBeenCalled();
     m.destroy();
   });
 });
@@ -214,12 +214,12 @@ describe("cards-g2 — the title link keeps its modifiers", () => {
   const link = (m: ReturnType<typeof mountCards>, i: number) =>
     m.card(i).querySelector<HTMLElement>("a.internal-link") as HTMLElement;
 
-  it("a plain click opens the record once", () => {
+  it("a plain click opens the note, not the metadata editor", () => {
     const m = mountCards();
     link(m, 0).dispatchEvent(click());
-    expect(m.onRecordClick).toHaveBeenCalledTimes(1);
-    expect(m.onRecordClick).toHaveBeenCalledWith(m.items[0]);
-    expect(openRecord).not.toHaveBeenCalled();
+    expect(openRecord).toHaveBeenCalledTimes(1);
+    expect(openRecord).toHaveBeenCalledWith({ id: "a.md", sourcePath: "a.md" }, "same", expect.anything());
+    expect(m.onRecordClick).not.toHaveBeenCalled();
     m.destroy();
   });
 
@@ -249,7 +249,8 @@ describe("cards-g2 — the title link keeps its modifiers", () => {
       const [, target, , onModal] = helpers.showMobileNavMenu.mock.calls[0] as [unknown, unknown, Event, () => void];
       expect(target).toEqual({ id: "a.md", sourcePath: "a.md" });
       onModal();
-      expect(m.onRecordClick).toHaveBeenCalledWith(m.items[0]);
+      expect(openRecord).toHaveBeenCalledWith({ id: "a.md", sourcePath: "a.md" }, "same", expect.anything());
+      expect(m.onRecordClick).not.toHaveBeenCalled();
       m.destroy();
     } finally {
       jest.useRealTimers();

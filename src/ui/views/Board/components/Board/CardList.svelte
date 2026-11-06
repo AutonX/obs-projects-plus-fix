@@ -139,7 +139,6 @@
 <script lang="ts">
   // import { Checkbox, InternalLink} from "obsidian-svelte";
   import { Checkbox, Icon } from "obsidian-svelte";
-  import IconButton from "src/ui/components/IconButton/IconButton.svelte";
   import InternalLink from "src/ui/components/InternalLink.svelte";
 
   import {
@@ -149,7 +148,7 @@
   } from "src/lib/dataframe/dataframe";
   import { app } from "src/lib/stores/obsidian";
   import { getAnimationDuration } from "src/lib/helpers/animation";
-  import { openRecord } from "src/lib/record/openRecord";
+  import { openRecord, PLAIN_MODE, type RecordOpenMode } from "src/lib/record/openRecord";
   import { i18n } from "src/lib/stores/i18n";
   import { isTouchDevice } from "src/lib/stores/ui";
   import CardMetadata from "src/ui/components/CardMetadata/CardMetadata.svelte";
@@ -215,6 +214,10 @@
   const remOf = (frame: CardFrame): string | undefined =>
     frame.heightRem !== undefined ? `${frame.heightRem}rem` : undefined;
 
+  function openNote(id: string, sourcePath: string, mode: RecordOpenMode = PLAIN_MODE) {
+    void openRecord({ id, sourcePath }, mode, { app: $app });
+  }
+
   const getRecordColor = getRecordColorContext.get();
   const sortRecords = sortRecordsContext.get();
 
@@ -277,6 +280,11 @@
     event.stopPropagation();
     openContextMenu(
       [
+        {
+          title: $i18n.t("modals.note.edit.title"),
+          icon: "pencil",
+          onClick: () => onRecordClick(item),
+        },
         {
           title: $i18n.t("views.board.note.delete"),
           icon: "trash-2",
@@ -374,7 +382,7 @@
         mediaSize={thumbnail?.layout === "left" ? frameHeight : undefined}
         on:keypress
         on:click={(e) => {
-          if (!isGripTarget(e)) onRecordClick(item);
+          if (!isGripTarget(e)) openNote(item.id, item.id);
         }}
       >
         <span slot="grip" class="board-card-grip" use:dragHandle aria-label={$i18n.t("common.drag-to-reorder")}>
@@ -421,17 +429,13 @@
               sourcePath={item.id}
               resolved
               on:open={({ detail: { linkText, sourcePath, newLeaf, shiftKey } }) => {
-                // v3.0.8: Unified note navigation — Shift → new window, Ctrl → new tab, else → modal
-                if (shiftKey) {
-                  void openRecord({ id: linkText, sourcePath }, "window", { app: $app });
-                } else if (newLeaf) {
-                  void openRecord({ id: linkText, sourcePath }, "tab", { app: $app });
-                } else {
-                  onRecordClick(item);
-                }
+                // The title is the note. Shift → new window, Ctrl → new tab, otherwise the note itself.
+                if (shiftKey) openNote(linkText, sourcePath, "window");
+                else if (newLeaf) openNote(linkText, sourcePath, "tab");
+                else openNote(linkText, sourcePath);
               }}
               on:longpress={({ detail: { linkText, sourcePath, event } }) => {
-                showMobileNavMenu($app, { id: linkText, sourcePath }, event, () => onRecordClick(item));
+                showMobileNavMenu($app, { id: linkText, sourcePath }, event, () => openNote(linkText, sourcePath));
               }}
               on:hover={({ detail: { event, sourcePath } }) => {
                 handleHoverLink(event, sourcePath);
@@ -440,19 +444,17 @@
               {@const path = item.values["path"]}
               {getDisplayName(isString(path) ? path : item.id)}
             </InternalLink>
-            <span class="edit-hint">
-              <IconButton
-                icon="pencil"
-                tooltip={$i18n.t(readOnly ? "common.open-note" : "components.note.edit")}
-                onClick={(event) => {
-                  // The card itself opens the record on click; open it once.
-                  event.stopPropagation();
-                  onRecordClick(item);
-                }}
-              />
-            </span>
           {:else}
-            <CardMetadata fields={[customHeader]} record={item} />
+            <!-- A custom title is still the note. A wikilink inside it opens
+                 itself and stops the click; anything else on the title opens
+                 the note. Metadata editing is the card's context menu. The inner
+                 link is the keyboard control; this wrapper only catches a
+                 click on the title text around it. -->
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <div on:click|stopPropagation={() => openNote(item.id, item.id)}>
+              <CardMetadata fields={[customHeader]} record={item} />
+            </div>
           {/if}
         </div>
         <CardMetadata slot="metadata" fields={bodyFields} record={item} />
@@ -492,10 +494,9 @@
 
   /* cards-g1: the grip fills its lane from the card's top border to its
      bottom one (the negative block margins reach through the card padding,
-     `--board-card-pad` in styles.css), so the whole strip is the handle. The
-     glyph is top-aligned with the header line rather than centred: on a tall
-     card a centred glyph drifts away from the title it moves, and a top handle
-     is the iOS/Trello norm. */
+     `--board-card-pad` in styles.css), so the whole strip is the handle.
+     On a text card the title is centred in the card, and so is this glyph.
+     A cover keeps the title at the top, and the glyph with it. */
   .board-card-grip {
     grid-column: 1;
     /* cards-g4: every row of the card; with no explicit rows (no cover, or a
@@ -562,6 +563,13 @@
     color: var(--text-normal);
   }
 
+  /* A cover keeps its title at the top of the card; the glyph stays with it.
+     A text card drops the top inset so the centred glyph lines up with the title. */
+  :global(.projects--board--card:not(.ppp-shared-card--media-top):not(.ppp-shared-card--media-left)) .board-card-grip {
+    justify-content: center;
+    padding-top: 0;
+  }
+
   /* ios-d1: on touch the grip is the only way to move a card (a pan on the
      card body scrolls the board), so it is shown plainly. cards-g1: the lane
      itself is the finger target — a full target wide, and at least one tall
@@ -616,25 +624,6 @@
     align-items: center;
   }
 
-  .card-header .edit-hint {
-    margin-left: auto;
-    transition: opacity 120ms ease;
-  }
-
-  /* The pencil is revealed by hover or keyboard focus where a hover exists. */
-  @media (hover: hover) and (pointer: fine) {
-    .card-header .edit-hint {
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    .ppp-board-card-slot:hover .edit-hint,
-    .ppp-board-card-slot:focus-within .edit-hint {
-      opacity: 1;
-      visibility: visible;
-    }
-  }
-
   .checkbox-wrapper {
     display: flex;
     flex-direction: column;
@@ -643,12 +632,6 @@
   }
 
   @media (pointer: coarse) {
-    /* ios-t1: a tap on the card opens the record, which is all the pencil
-       does, so on touch it is not a separate target to aim between. */
-    .card-header .edit-hint {
-      display: none;
-    }
-
     /* ios-t1: the checkbox's finger square is its wrapper's own box. The
        wrapper is a target wide and tall, the box centred in it, and the
        input's ::before fills exactly that square — so the target starts where

@@ -15,6 +15,9 @@ test("the column hands the card list its read-only state", () => {
   expect(read("BoardColumn.svelte")).toMatch(/<CardGroup[\s\S]*?readOnly=\{dataReadOnly\}/);
 });
 
-test("a read-only card's pencil says it opens the note", () => {
-  expect(read("CardList.svelte")).toMatch(/tooltip=\{\$i18n\.t\(readOnly \? "common\.open-note" : "components\.note\.edit"\)\}/);
+test("a card click opens the note; metadata editing is the context menu", () => {
+  const source = read("CardList.svelte");
+  expect(source).toMatch(/openNote\(item\.id, item\.id\)/);
+  expect(source).toMatch(/modals\.note\.edit\.title/);
+  expect(source).not.toMatch(/class="edit-hint"/);
 });

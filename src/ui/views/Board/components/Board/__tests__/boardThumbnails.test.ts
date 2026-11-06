@@ -19,6 +19,7 @@ import { join, resolve } from "path";
 import { tick } from "svelte";
 
 import { SRC_ROOT, stripCssComments, svelteStyles } from "src/__tests__/support/cssScan";
+import { openRecord } from "src/lib/record/openRecord";
 
 // CardList reads two view contexts keyed by private symbols (gripLayout pattern).
 jest.mock("src/ui/views/helpers", () => ({
@@ -319,14 +320,16 @@ describe.each(["top", "left"])("cards-g4 — %s thumbnails", (layout) => {
     m.destroy();
   });
 
-  it("a click on the thumbnail opens the record once, like the body", () => {
+  it("a click on the thumbnail opens the note once, like the body", () => {
     const m = mountCards({ thumbnailLayout: layout });
+    (openRecord as jest.Mock).mockClear();
     m.card("a.md").querySelector("img")?.dispatchEvent(click());
-    expect(m.onRecordClick).toHaveBeenCalledTimes(1);
-    expect(m.onRecordClick).toHaveBeenCalledWith(m.items[0]);
+    expect(openRecord).toHaveBeenCalledTimes(1);
+    expect(openRecord).toHaveBeenCalledWith({ id: "a.md", sourcePath: "a.md" }, "same", expect.anything());
     m.card("d.md").querySelector(".ppp-board-card-media")?.dispatchEvent(click());
-    expect(m.onRecordClick).toHaveBeenCalledTimes(2);
-    expect(m.onRecordClick).toHaveBeenLastCalledWith(m.items[3]);
+    expect(openRecord).toHaveBeenCalledTimes(2);
+    expect(openRecord).toHaveBeenLastCalledWith({ id: "d.md", sourcePath: "d.md" }, "same", expect.anything());
+    expect(m.onRecordClick).not.toHaveBeenCalled();
     m.destroy();
   });
 
@@ -374,7 +377,7 @@ describe.each(["top", "left"])("cards-g4 — %s thumbnails", (layout) => {
     expect(m.onRecordCheck).toHaveBeenCalledWith(m.items[0], true);
     expect(m.onRecordClick).not.toHaveBeenCalled();
     m.card("a.md").querySelector("a.internal-link")?.dispatchEvent(click());
-    expect(m.onRecordClick).toHaveBeenCalledTimes(1);
+    expect(m.onRecordClick).not.toHaveBeenCalled();
     m.destroy();
   });
 });

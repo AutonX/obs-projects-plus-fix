@@ -20,6 +20,7 @@ import { join, resolve } from "path";
 import { tick } from "svelte";
 
 import { SRC_ROOT, stripCssComments, svelteStyles } from "src/__tests__/support/cssScan";
+import { openRecord } from "src/lib/record/openRecord";
 
 // CardList reads two view contexts keyed by private symbols; a test cannot
 // provide them through `context`, so the context helpers are stubbed.
@@ -31,6 +32,11 @@ jest.mock("src/ui/views/helpers", () => {
     sortRecordsContext: { get: () => (records: unknown[]) => records, set: () => undefined },
   };
 });
+
+jest.mock("src/lib/record/openRecord", () => ({
+  ...jest.requireActual("src/lib/record/openRecord"),
+  openRecord: jest.fn(() => Promise.resolve()),
+}));
 
 // ColumnHeader owns its rendered Markdown through an Obsidian `Component`
 // (`markdownOwner`), which the shared obsidian mock lacks; R0_31 adds the same.
@@ -384,12 +390,15 @@ describe("cards-g1 — the card grip in the rendered list", () => {
   });
 
   it("a click on the grip lane does not open the card; a click on its content does", () => {
+    (openRecord as jest.Mock).mockClear();
     const m = mountCards();
     const card = m.cards()[0] as HTMLElement;
     m.gripOf(card).dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(m.onRecordClick).not.toHaveBeenCalled();
+    expect(openRecord).not.toHaveBeenCalled();
     card.querySelector(".color-item")?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    expect(m.onRecordClick).toHaveBeenCalledTimes(1);
+    expect(openRecord).toHaveBeenCalledTimes(1);
+    expect(m.onRecordClick).not.toHaveBeenCalled();
     m.destroy();
   });
 

@@ -116,7 +116,10 @@
   .projects--board--card {
     display: grid;
     grid-template-columns: var(--board-card-grip-lane, var(--size-4-5)) minmax(0, 1fr);
-    align-items: start;
+    /* A title-only card is shorter than the 3rem floor, so the title sits in
+       the middle of that floor. A card whose text fills it does not move.
+       Covers keep the top alignment below. */
+    align-items: center;
     padding-left: 0;
     transition: background 150ms ease, box-shadow 150ms ease;
     position: relative;
@@ -145,6 +148,10 @@
             content box, whose width the column gives it, so it is not
             circular. The square media fills the lane (CardList), and the
             colour item keeps the rest, a small gap after the thumbnail. */
+  .projects--board--card.ppp-shared-card--media-top,
+  .projects--board--card.ppp-shared-card--media-left {
+    align-items: start;
+  }
   .projects--board--card.ppp-shared-card--media-top {
     grid-template-rows: auto auto;
   }
