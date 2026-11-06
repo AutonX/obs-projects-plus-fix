@@ -31,6 +31,8 @@
   import { CreateProjectModal } from "src/ui/modals/createProjectModal";
   import { AddViewModal } from "src/ui/modals/addViewModal";
   import { ConfirmDialogModal } from "src/ui/modals/confirmDialog";
+  import { InputDialogModal } from "src/ui/modals/inputDialog";
+  import type { ProjectId } from "src/settings/settings";
   import CompactNavBar from "src/ui/components/Navigation/CompactNavBar.svelte";
   import ProjectRail from "src/ui/components/Navigation/ProjectRail.svelte";
   import SettingsMenuPopover from "src/ui/components/Navigation/SettingsMenu/SettingsMenuPopover.svelte";
@@ -318,6 +320,49 @@
     ).open();
   }
 
+  function renameProject(id: ProjectId) {
+    const current = $settings.projects.find((item) => item.id === id);
+    if (!current) return;
+    new InputDialogModal(
+      $app,
+      $i18n.t("common.rename"),
+      $i18n.t("common.rename"),
+      (value) => {
+        const name = value.trim();
+        if (!name || name === current.name) return;
+        if ($settings.projects.some((item) => item.id !== id && item.name === name)) {
+          new Notice($i18n.t("modals.project.create.existing-name-error"));
+          return;
+        }
+        const latest = $settings.projects.find((item) => item.id === id);
+        if (!latest) return;
+        settings.updateProject({ ...latest, name });
+      },
+      current.name
+    ).open();
+  }
+
+  function confirmDeleteProject(id: ProjectId) {
+    const projectToDelete = $settings.projects.find((item) => item.id === id);
+    if (!projectToDelete) return;
+    new ConfirmDialogModal(
+      $app,
+      $i18n.t("modals.project.delete.title"),
+      $i18n.t("modals.project.delete.message", { project: projectToDelete.name }),
+      $i18n.t("modals.project.delete.cta"),
+      () => {
+        settings.deleteProject(id);
+        if (projectId === id) {
+          const remaining = $settings.projects.filter((item) => item.id !== id);
+          if (remaining.length > 0 && remaining[0]) {
+            projectId = remaining[0].id;
+            dispatch("projectIdChange", projectId);
+          }
+        }
+      }
+    ).open();
+  }
+
   function mergeViewConfig(next: Record<string, any>) {
     if (!project || !view) {
       return;
@@ -415,7 +460,14 @@
 -->
 <div class="projects-container" style:--ppp-below-nav-h={belowNav}>
   {#if projects.length > 0}
-    <ProjectRail {projects} projectId={project?.id} on:select={(event) => selectProject(event.detail)} />
+    <ProjectRail
+      {projects}
+      projectId={project?.id}
+      on:select={(event) => selectProject(event.detail)}
+      on:create={openCreateProject}
+      on:rename={(event) => renameProject(event.detail)}
+      on:delete={(event) => confirmDeleteProject(event.detail)}
+    />
   {/if}
   <div class="projects-stage">
   <div class="projects-chrome">
@@ -512,28 +564,7 @@
           ).open();
         }
       }}
-      on:deleteProject={(event) => {
-        const projectToDelete = $settings.projects.find(p => p.id === event.detail);
-        if (projectToDelete) {
-          new ConfirmDialogModal(
-            $app,
-            $i18n.t("modals.project.delete.title"),
-            $i18n.t("modals.project.delete.message", { project: projectToDelete.name }),
-            $i18n.t("modals.project.delete.cta"),
-            () => {
-              settings.deleteProject(event.detail);
-              // If deleted project was active, switch to first available
-              if (projectId === event.detail) {
-                const remaining = $settings.projects.filter(p => p.id !== event.detail);
-                if (remaining.length > 0 && remaining[0]) {
-                  projectId = remaining[0].id;
-                  dispatch("projectIdChange", projectId);
-                }
-              }
-            }
-          ).open();
-        }
-      }}
+      on:deleteProject={(event) => confirmDeleteProject(event.detail)}
       on:addView={() => handleAddView(project)}
       on:updateViewConfig={handleUpdateViewConfig}
       on:toggleShowViewTitles={(event) => {
