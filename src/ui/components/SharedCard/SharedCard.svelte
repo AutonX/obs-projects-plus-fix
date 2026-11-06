@@ -116,7 +116,7 @@
   .projects--board--card {
     display: grid;
     grid-template-columns: var(--board-card-grip-lane, var(--size-4-5)) minmax(0, 1fr);
-    /* A title-only card is shorter than the 3rem floor, so the title sits in
+    /* A title-only card is shorter than the 4rem floor, so the title sits in
        the middle of that floor. A card whose text fills it does not move.
        Covers keep the top alignment below. */
     align-items: center;

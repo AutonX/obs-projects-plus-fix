@@ -164,10 +164,10 @@
      can reach through it to the card's top and bottom edges. cards-g2: the
      card is SharedCard.svelte's article; this surface stays global.
      A title-only card (no field label) would otherwise shrink to one line.
-     3rem is about the "name" label plus the title. A saved frame writes an
-     inline min-height and wins; extra fields still grow the card. */
+     4rem is a little taller than the "name" label plus the title. A saved
+     frame writes an inline min-height and wins; extra fields still grow the card. */
   --board-card-pad: var(--size-4-1);
-  min-height: 3rem;
+  min-height: 4rem;
   background-color: var(--background-primary);
   border-radius: var(--radius-s);
   border: var(--ppp-border-width) solid var(--background-modifier-border);
